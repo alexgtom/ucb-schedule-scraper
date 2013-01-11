@@ -53,16 +53,20 @@ end
 
 def read_page(url)
   file = open(url)
-  file.read
+  content = file.read
+
+  tokenizer = HtmlTokenizer.new(content)
+
+  while not tokenizer.empty?
+    token = tokenizer.shift
+    p token
+  end
 end
 
-class HtmlTokenizer
-  include Enumerable
-
+class HtmlTokenizer < Array
   def initialize(page)
     @char_pos = 0
-    @token_list = []
-    
+
     # strip leading and ending whitespace
     page = page.strip
   
@@ -78,14 +82,6 @@ class HtmlTokenizer
     end
   end
 
-  def <<(val)
-    @token_list << val
-  end
-
-  def each(&block)
-    @token_list.each(&block)
-  end
-
   private
 
   def tag(page)
@@ -99,7 +95,7 @@ class HtmlTokenizer
     token << page[@char_pos] if @char_pos < page.length
     @char_pos += 1
 
-    @token_list << token
+    self << token
   end
 
   def text(page)
@@ -115,7 +111,7 @@ class HtmlTokenizer
     
     # prevent blank tokens from being added to token list
     if token.strip.length > 0
-      @token_list << token.strip
+      self << token.strip
     end
   end
 end
@@ -135,6 +131,7 @@ if __FILE__ == $PROGRAM_NAME
 
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
+  read_page('test/schedule_cases/section.html')
 
 end
 
