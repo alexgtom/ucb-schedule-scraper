@@ -2,6 +2,7 @@
 
 require 'uri'
 require 'optparse'
+require 'open-uri'
 # Sample URLs:
 #   Term
 #       p_term = {FL, SP, SU}
@@ -41,11 +42,82 @@ require 'optparse'
 #   Status/Last Changed
 #       http://osoc.berkeley.edu/OSOC/osoc?p_term=FL&p_updt=UPDATED
 
-def schedule_url(params)
-  "http://osoc.berkeley.edu/OSOC/osoc?#{URI.encode_www_form(params)}"
+SCHEDULE_URL = "http://osoc.berkeley.edu/OSOC/osoc?"
+
+def schedule_url(params={})
+  # adds "p_ to beginning of each key in params
+  renamed_params = Hash[params.map {|k, v| ["p_#{k.to_s}", v]}]
+
+  "#{SCHEDULE_URL}#{URI.encode_www_form(renamed_params)}"
+end
+
+def read_page(url)
+  file = open(url)
+  file.read
+end
+
+class HtmlTokenizer
+  include Enumerable
+
+  def initialize(page)
+    @char_pos = 0
+    @token_list = []
+
+    page = page.strip
+
+    while @char_pos < page.length
+      curr_char = page[@char_pos]
+
+      if curr_char == "<"
+        @token_list << tag(page)
+      else
+        @token_list << text(page)
+      end
+    end
+  end
+
+  def <<(val)
+    @token_list << val
+  end
+
+  def each(&block)
+    @token_list.each(&block)
+  end
+
+  private
+
+  def tag(page)
+    token = ""
+
+    while @char_pos < page.length and page[@char_pos] != '>'
+      token << page[@char_pos]
+      @char_pos += 1
+    end
+
+    token << page[@char_pos] if @char_pos < page.length
+    @char_pos += 1
+
+    token
+  end
+
+  def text(page)
+    token = ""
+
+    while @char_pos < page.length and page[@char_pos+1] != '<'
+      token << page[@char_pos]
+      @char_pos += 1
+    end
+
+    token << page[@char_pos] if @char_pos < page.length
+    @char_pos += 1
+
+    token
+  end
+
 end
 
 if __FILE__ == $PROGRAM_NAME
+  # command line arguments
   options = {}
   OptionParser.new do |opts|
     opts.banner = "Usage: example.rb [options]"
@@ -56,6 +128,9 @@ if __FILE__ == $PROGRAM_NAME
   end.parse!
   p options
   p ARGV
-  p schedule_url(:p_term => :FL, :p_dept => :CHEM)
+
+  # main program
+  #p schedule_page(:term => "FL", :dept => "CHEM")
+
 end
 
