@@ -62,9 +62,11 @@ class HtmlTokenizer
   def initialize(page)
     @char_pos = 0
     @token_list = []
-
+    
+    # strip leading and ending whitespace
     page = page.strip
-
+  
+    # tokenize
     while @char_pos < page.length
       curr_char = page[@char_pos]
 
@@ -111,11 +113,11 @@ class HtmlTokenizer
     token << page[@char_pos] if @char_pos < page.length
     @char_pos += 1
     
+    # prevent blank tokens from being added to token list
     if token.strip.length > 0
       @token_list << token.strip
     end
   end
-
 end
 
 if __FILE__ == $PROGRAM_NAME
