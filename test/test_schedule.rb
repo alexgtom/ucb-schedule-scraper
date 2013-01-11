@@ -13,30 +13,30 @@ end
 class HtmlTokenizerTests < Test::Unit::TestCase
   def test_output_tokens
     assert_equal(["<table>", "</table>"], 
-                 HtmlTokenizer.new("<table></table>").each{|v| v})
+                 HtmlTokenizer.new("<table></table>").to_a)
     assert_equal(["<table>", "hello", "</table>"], 
-                 HtmlTokenizer.new("<table>hello</table>").each{|v| v})
+                 HtmlTokenizer.new("<table>hello</table>").to_a)
     assert_equal(["hello"], 
-                 HtmlTokenizer.new("hello").each{|v| v})
+                 HtmlTokenizer.new("hello").to_a)
     assert_equal([], 
-                 HtmlTokenizer.new("").each{|v| v})
+                 HtmlTokenizer.new("").to_a)
     assert_equal(["<table>"], 
-                 HtmlTokenizer.new("<table>").each{|v| v})
+                 HtmlTokenizer.new("<table>").to_a)
     assert_equal(["<>"], 
-                 HtmlTokenizer.new("<>").each{|v| v})
+                 HtmlTokenizer.new("<>").to_a)
     assert_equal(["<"], 
-                 HtmlTokenizer.new("<").each{|v| v})
+                 HtmlTokenizer.new("<").to_a)
     assert_equal(["<<<<"],
-                 HtmlTokenizer.new("<<<<").each{|v| v})
+                 HtmlTokenizer.new("<<<<").to_a)
     assert_equal([">"], 
-                 HtmlTokenizer.new(">").each{|v| v}) 
+                 HtmlTokenizer.new(">").to_a) 
     assert_equal([">>>>"], 
-                 HtmlTokenizer.new(">>>>").each{|v| v})
+                 HtmlTokenizer.new(">>>>").to_a)
     assert_equal(["hello"], 
-                 HtmlTokenizer.new("   hello   ").each{|v| v})
+                 HtmlTokenizer.new("   hello   ").to_a)
     assert_equal(["hello world"], 
-                 HtmlTokenizer.new("   hello world   ").each{|v| v})
+                 HtmlTokenizer.new("   hello world   ").to_a)
     assert_equal(["<a>", "<a>", "<a>"], 
-                 HtmlTokenizer.new("   <a>   <a>   <a>   ").each{|v| v})
+                 HtmlTokenizer.new("   <a>   <a>   <a>   ").to_a)
   end
 end
