@@ -44,6 +44,12 @@ require 'open-uri'
 
 SCHEDULE_URL = "http://osoc.berkeley.edu/OSOC/osoc?"
 
+HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
+HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
+HTML_ATTRIBUTE_SINGLE_QUOTES = /[^"]+/
+HTML_ATTRIBUTE_DOUBLE_QUOTES = /[^']+/
+HTML_ATTRIBUTE_REGEX = /(#{HTML_ATTRIBUTE_NO_QUOTES}|#{HTML_ATTRIBUTE_DOUBLE_QUOTES}|#{HTML_ATTRIBUTE_SINGLE_QUOTES})/
+
 def schedule_url(params={})
   # adds "p_ to beginning of each key in params
   renamed_params = Hash[params.map {|k, v| ["p_#{k.to_s}", v]}]
@@ -59,7 +65,16 @@ def read_page(url)
 
   while not tokenizer.empty?
     token = tokenizer.shift
-    p token
+  end
+end
+
+def tag_name(html)
+  html = html.strip.slice(1..-1).strip
+
+  if html != '/'
+    html.match(HTML_TAG_REGEX)[0].downcase
+  else
+    tag_name(html) 
   end
 end
 
@@ -68,23 +83,23 @@ class HtmlTokenizer < Array
     @char_pos = 0
 
     # strip leading and ending whitespace
-    page = page.strip
+    page.strip!
   
     # tokenize
     while @char_pos < page.length
       curr_char = page[@char_pos]
 
       if curr_char == "<"
-        tag(page)
+        tag_token(page)
       else
-        text(page)
+        text_token(page)
       end
     end
   end
 
   private
 
-  def tag(page)
+  def tag_token(page)
     token = ""
 
     while @char_pos < page.length and page[@char_pos] != '>'
@@ -98,7 +113,7 @@ class HtmlTokenizer < Array
     self << token
   end
 
-  def text(page)
+  def text_token(page)
     token = ""
 
     while @char_pos < page.length and page[@char_pos+1] != '<'
@@ -112,6 +127,57 @@ class HtmlTokenizer < Array
     # prevent blank tokens from being added to token list
     if token.strip.length > 0
       self << token.strip
+    end
+  end
+end
+
+class HtmlTag < Hash
+  def initialize(html)
+    html.strip!
+    html.sub!(/^<\s*\/?\s*/, '').sub!(/\s*>$/, '')
+
+    html = tag_name(html)
+    while not html.empty?
+      html = pair(html)
+      p html
+    end
+  end
+
+  private
+  
+  def tag_name(html)
+    if html =~ HTML_TAG_REGEX
+      self[:tag_name] = html.match(HTML_TAG_REGEX)[0]
+      html.sub!(HTML_TAG_REGEX, '') 
+    end
+    html.strip
+  end
+
+  def pair(html)
+    key = attribute(html)
+    html.sub!(HTML_TAG_REGEX, '')
+    self[key] = value(html)
+    html.sub!(HTML_ATTRIBUTE_REGEX, '')
+    html.lstrip
+  end
+
+  def attribute(html)
+    html.lstrip!
+    html.match(HTML_TAG_REGEX)[0].downcase.to_sym
+  end
+
+  def value(html)
+    html.lstrip!
+    if html[0] == "="
+      html.sub!(/=/, '')
+      html.lstrip!
+      if html =~ HTML_ATTRIBUTE_NO_QUOTES
+        html.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
+      else
+        html.match(/(#{HTML_ATTRIBUTE_SINGLE_QUOTES}|#{HTML_ATTRIBUTE_DOUBLE_QUOTES})/)[0][1..-2]
+      end
+    else
+      nil
     end
   end
 end
