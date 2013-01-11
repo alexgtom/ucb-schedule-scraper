@@ -46,9 +46,8 @@ SCHEDULE_URL = "http://osoc.berkeley.edu/OSOC/osoc?"
 
 HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
 HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
-HTML_ATTRIBUTE_SINGLE_QUOTES = /[^"]+/
-HTML_ATTRIBUTE_DOUBLE_QUOTES = /[^']+/
-HTML_ATTRIBUTE_REGEX = /(#{HTML_ATTRIBUTE_NO_QUOTES}|#{HTML_ATTRIBUTE_DOUBLE_QUOTES}|#{HTML_ATTRIBUTE_SINGLE_QUOTES})/
+HTML_ATTRIBUTE_SINGLE_QUOTES = /'[^']+''/
+HTML_ATTRIBUTE_DOUBLE_QUOTES = /""[^"]+""/
 
 def schedule_url(params={})
   # adds "p_ to beginning of each key in params
@@ -68,14 +67,36 @@ def read_page(url)
   end
 end
 
-def tag_name(html)
-  html = html.strip.slice(1..-1).strip
+def tag_name(token)
+  token = token.strip.slice(1..-1).strip
 
-  if html != '/'
-    html.match(HTML_TAG_REGEX)[0].downcase
+  if token != '/'
+    token.match(HTML_TAG_REGEX)[0].downcase
   else
-    tag_name(html) 
+    tag_name(token) 
   end
+end
+
+def attribute_value(token, attr)
+  token.strip!
+  
+  match = token.match(/#{attr}\s*=\s*/i) 
+  return nil if match == nil
+
+  match = match[0]
+  char_pos = (token =~ /#{match}/) + match.length
+  token = token[char_pos..-1]
+
+  if token =~ HTML_ATTRIBUTE_SINGLE_QUOTES
+    token.match(HTML_ATTRIBUTE_SINGLE_QUOTES)[0][1..-2]
+  elsif token =~ HTML_ATTRIBUTE_DOUBLE_QUOTES
+    token.match(HTML_ATTRIBUTE_DOUBLE_QUOTES)[0][1..-2]
+  elsif token =~ HTML_ATTRIBUTE_NO_QUOTES
+    token.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
+  else
+    nil
+  end
+
 end
 
 class HtmlTokenizer < Array
@@ -131,56 +152,6 @@ class HtmlTokenizer < Array
   end
 end
 
-class HtmlTag < Hash
-  def initialize(html)
-    html.strip!
-    html.sub!(/^<\s*\/?\s*/, '').sub!(/\s*>$/, '')
-
-    html = tag_name(html)
-    while not html.empty?
-      html = pair(html)
-      p html
-    end
-  end
-
-  private
-  
-  def tag_name(html)
-    if html =~ HTML_TAG_REGEX
-      self[:tag_name] = html.match(HTML_TAG_REGEX)[0]
-      html.sub!(HTML_TAG_REGEX, '') 
-    end
-    html.strip
-  end
-
-  def pair(html)
-    key = attribute(html)
-    html.sub!(HTML_TAG_REGEX, '')
-    self[key] = value(html)
-    html.sub!(HTML_ATTRIBUTE_REGEX, '')
-    html.lstrip
-  end
-
-  def attribute(html)
-    html.lstrip!
-    html.match(HTML_TAG_REGEX)[0].downcase.to_sym
-  end
-
-  def value(html)
-    html.lstrip!
-    if html[0] == "="
-      html.sub!(/=/, '')
-      html.lstrip!
-      if html =~ HTML_ATTRIBUTE_NO_QUOTES
-        html.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
-      else
-        html.match(/(#{HTML_ATTRIBUTE_SINGLE_QUOTES}|#{HTML_ATTRIBUTE_DOUBLE_QUOTES})/)[0][1..-2]
-      end
-    else
-      nil
-    end
-  end
-end
 
 if __FILE__ == $PROGRAM_NAME
   # command line arguments

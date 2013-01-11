@@ -47,14 +47,13 @@ class HtmlTokenizerTests < Test::Unit::TestCase
     assert_equal(["<a>", "<a>", "<a>"], 
                  HtmlTokenizer.new("   <a>   <a>   <a>   ").to_a)
   end
-end
 
-class HtmlTagTests < Test::Unit::TestCase
-  def test_html_tag
-    assert_equal({:tag_name => 'a'}, HtmlTag.new('<a>'))
-    assert_equal({:tag_name => 'a', :href => 'b'}, HtmlTag.new('<a href="b">'))
-    assert_equal({:tag_name => 'a', :href => 'b'}, HtmlTag.new('<a href=\'b\'>'))
-    assert_equal({:tag_name => 'a', :href => 'b', :target => '_blank'}, 
-                 HtmlTag.new('<a href=\'b\' target="_blank">'))
+  def test_attribute_value
+    assert_equal("b", attribute_value('<a href="b">', 'href')) 
+    assert_equal("b", attribute_value('  <  a href="b">  ', 'href')) 
+    assert_equal("b", attribute_value('<a href=\'b\'>', 'href')) 
+    assert_equal("_blank", attribute_value('<a href="b" target=\'_blank\'>', 
+                                           'target')) 
+    assert_equal(nil, attribute_value('<a>', 'href')) 
   end
 end
