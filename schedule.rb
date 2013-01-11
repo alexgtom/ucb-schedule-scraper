@@ -69,9 +69,9 @@ class HtmlTokenizer
       curr_char = page[@char_pos]
 
       if curr_char == "<"
-        @token_list << tag(page)
+        tag(page)
       else
-        @token_list << text(page)
+        text(page)
       end
     end
   end
@@ -97,7 +97,7 @@ class HtmlTokenizer
     token << page[@char_pos] if @char_pos < page.length
     @char_pos += 1
 
-    token
+    @token_list << token
   end
 
   def text(page)
@@ -110,8 +110,10 @@ class HtmlTokenizer
 
     token << page[@char_pos] if @char_pos < page.length
     @char_pos += 1
-
-    token
+    
+    if token.strip.length > 0
+      @token_list << token.strip
+    end
   end
 
 end
