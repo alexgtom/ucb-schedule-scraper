@@ -41,7 +41,7 @@ class HtmlTokenizerTests < Test::Unit::TestCase
   
   def test_shift_until_text
     t = HtmlTokenizer.new("<table>hello</hello>")
-    t.shift_until_text
+    t.shift_until(:text)
     assert_equal("hello", t.first)
   end
 end
@@ -51,6 +51,7 @@ class HtmlTokenTests < Test::Unit::TestCase
   def test_attribute
     assert_equal("b", HtmlToken.new('<a href="b">')['href']) 
     assert_equal("b", HtmlToken.new('<a href="b">')[:HREF]) 
+    assert_equal("b", HtmlToken.new('<a href="b">')['HREF']) 
     assert_equal("b", HtmlToken.new('  <  a href="b">  ')['href']) 
     assert_equal("b", HtmlToken.new('<a href=\'b\'>')['href']) 
     assert_equal("_blank", 

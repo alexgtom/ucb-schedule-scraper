@@ -77,7 +77,18 @@ end
 class Section 
   def initialize(tokenizer)
     begin
-      p tokenizer.shift
+      course(tokenizer)                 if tokenizer.first =~ /^Course:/
+      course_title(tokenizer)           if tokenizer.first =~ /^Course Title:/
+      location(tokenizer)               if tokenizer.first =~ /^Location:/
+      instructor(tokenizer)             if tokenizer.first =~ /^Instructor:/
+      status_last_changed(tokenizer)    if tokenizer.first =~ /^Status\/Last Changed:/
+      course_control_number(tokenizer)  if tokenizer.first =~ /^Course Control Number:/
+      units_credit(tokenizer)           if tokenizer.first =~ /^Units\/Credit:/
+      final_exam_group(tokenizer)       if tokenizer.first =~ /^Final Exam Group:/
+      restrictions(tokenizer)           if tokenizer.first =~ /^Restrictions:/
+      note(tokenizer)                   if tokenizer.first =~ /^Note:/
+      enrollment_on(tokenizer)          if tokenizer.first =~ /^Enrollment on /
+      enrollment_information(tokenizer) if tokenizer.first =~ /^Enrollment /
     end while tokenizer.first !=~ /^Course:/
   end
 
@@ -101,9 +112,9 @@ class HtmlTokenizer < Array
     end
   end
 
-  def shift_until_text
+  def shift_until(attr)
     # shifts the tokens over until the next :text token
-    while self.first.tag != :text
+    while self.first.tag.to_s != attr.to_s
       self.shift
     end
   end
