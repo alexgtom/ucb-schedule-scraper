@@ -106,8 +106,6 @@ class HtmlTokenizer < Array
     while self.first.tag != :text
       self.shift
     end
-
-    self
   end
 
   private

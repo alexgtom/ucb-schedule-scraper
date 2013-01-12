@@ -40,8 +40,9 @@ class HtmlTokenizerTests < Test::Unit::TestCase
   end
   
   def test_shift_until_text
-    assert_equal("hello", HtmlTokenizer.new("<table>hello</hello>")
-                 .shift_until_text.first)
+    t = HtmlTokenizer.new("<table>hello</hello>")
+    t.shift_until_text
+    assert_equal("hello", t.first)
   end
 end
 
