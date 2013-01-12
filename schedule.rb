@@ -146,7 +146,7 @@ class HtmlToken < String
       token.match(HTML_ATTRIBUTE_SINGLE_QUOTES)[1]
     elsif token.chr == '"'
       token.match(HTML_ATTRIBUTE_DOUBLE_QUOTES)[1]
-    elsif token != ' '
+    elsif token =~ /[^\s]/
       token.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
     else
       nil
