@@ -45,6 +45,7 @@ end
 class HtmlTokenTests < Test::Unit::TestCase
   def test_attribute
     assert_equal("b", HtmlToken.new('<a href="b">')['href']) 
+    assert_equal("b", HtmlToken.new('<a href="b">')[:HREF]) 
     assert_equal("b", HtmlToken.new('  <  a href="b">  ')['href']) 
     assert_equal("b", HtmlToken.new('<a href=\'b\'>')['href']) 
     assert_equal("_blank", 
