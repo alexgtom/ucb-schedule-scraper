@@ -40,8 +40,8 @@ class HtmlTokenizerTests < Test::Unit::TestCase
   end
   
   def test_shift_until_text
-    t = HtmlTokenizer.new("<table>hello</hello>")
-    t.shift_until(:text)
+    t = HtmlTokenizer.new("<a><b><table>hello</hello>")
+    assert_equal(["<a>", "<b>", "<table>"], t.shift_until(:text))
     assert_equal("hello", t.first)
   end
 end
@@ -62,10 +62,10 @@ class HtmlTokenTests < Test::Unit::TestCase
   def test_tag
     assert_equal('a', HtmlToken.new('<a>').tag)
     assert_equal('a', HtmlToken.new('<a href="">').tag)
-    assert_equal('a', HtmlToken.new('</a>').tag)
-    assert_equal('a', HtmlToken.new('</ a>').tag)
-    assert_equal('a', HtmlToken.new('< / a>').tag)
-    assert_equal('a', HtmlToken.new('< /a>').tag)
+    assert_equal('/a', HtmlToken.new('</a>').tag)
+    assert_equal('/a', HtmlToken.new('</ a>').tag)
+    assert_equal('/a', HtmlToken.new('< / a>').tag)
+    assert_equal('/a', HtmlToken.new('< /a>').tag)
     assert_equal(:text, HtmlToken.new('a').tag) 
   end
 end

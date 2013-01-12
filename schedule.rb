@@ -114,9 +114,12 @@ class HtmlTokenizer < Array
 
   def shift_until(attr)
     # shifts the tokens over until the next :text token
+    arr = []
     while self.first.tag.to_s != attr.to_s
-      self.shift
+      arr << self.shift
     end
+
+    arr
   end
 
   private
@@ -161,9 +164,9 @@ class HtmlToken < String
     if str[0] != '<'
       @tag = :text
     else
-      match = self.match(/^<\s*\/?\s*(#{HTML_TAG_REGEX})/)
+      match = self.match(/^<\s*(\/?)\s*(#{HTML_TAG_REGEX})/)
       if match
-        @tag = match[1]
+        @tag = match[1] + match[2]
       else
         @tag = nil
       end
