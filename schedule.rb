@@ -56,17 +56,32 @@ def schedule_url(params={})
   "#{SCHEDULE_URL}#{URI.encode_www_form(renamed_params)}"
 end
 
-def read_page(url)
-  file = open(url)
-  content = file.read
+class Query < Array
+  def initialize(url)
+    file = open(url)
+    content = file.read
 
-  tokenizer = HtmlTokenizer.new(content)
+    tokenizer = HtmlTokenizer.new(content)
 
-  while not tokenizer.empty?
-    token = tokenizer.shift
-    p token.tag
-    p token
+    while not tokenizer.empty?
+      if tokenizer.first =~ /^Course:/
+        self << Section.new(tokenizer)
+
+      else 
+        tokenizer.shift
+      end
+    end
   end
+end
+
+class Section 
+  def initialize(tokenizer)
+    begin
+      p tokenizer.shift
+    end while tokenizer.first !=~ /^Course:/
+  end
+
+  private
 end
 
 
@@ -84,6 +99,15 @@ class HtmlTokenizer < Array
         text_token(page)
       end
     end
+  end
+
+  def shift_until_text
+    # shifts the tokens over until the next :text token
+    while self.first.tag != :text
+      self.shift
+    end
+
+    self
   end
 
   private
@@ -175,7 +199,7 @@ if __FILE__ == $PROGRAM_NAME
 
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
-  read_page('test/schedule_cases/section.html')
+  Query.new('test/schedule_cases/section.html')
 
 end
 

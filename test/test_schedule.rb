@@ -12,33 +12,37 @@ end
 class HtmlTokenizerTests < Test::Unit::TestCase
   def test_output_tokens
     assert_equal(["<table>", "</table>"], 
-                 HtmlTokenizer.new("<table></table>").to_a)
+                 HtmlTokenizer.new("<table></table>"))
     assert_equal(["<table>", "hello", "</table>"], 
-                 HtmlTokenizer.new("<table>hello</table>").to_a)
+                 HtmlTokenizer.new("<table>hello</table>"))
     assert_equal(["hello"], 
-                 HtmlTokenizer.new("hello").to_a)
+                 HtmlTokenizer.new("hello"))
     assert_equal([], 
-                 HtmlTokenizer.new("").to_a)
+                 HtmlTokenizer.new(""))
     assert_equal(["<table>"], 
-                 HtmlTokenizer.new("<table>").to_a)
+                 HtmlTokenizer.new("<table>"))
     assert_equal(["<>"], 
-                 HtmlTokenizer.new("<>").to_a)
+                 HtmlTokenizer.new("<>"))
     assert_equal(["<"], 
-                 HtmlTokenizer.new("<").to_a)
+                 HtmlTokenizer.new("<"))
     assert_equal(["<<<<"],
-                 HtmlTokenizer.new("<<<<").to_a)
+                 HtmlTokenizer.new("<<<<"))
     assert_equal([">"], 
-                 HtmlTokenizer.new(">").to_a) 
+                 HtmlTokenizer.new(">")) 
     assert_equal([">>>>"], 
-                 HtmlTokenizer.new(">>>>").to_a)
+                 HtmlTokenizer.new(">>>>"))
     assert_equal(["hello"], 
-                 HtmlTokenizer.new("   hello   ").to_a)
+                 HtmlTokenizer.new("   hello   "))
     assert_equal(["hello world"], 
-                 HtmlTokenizer.new("   hello world   ").to_a)
+                 HtmlTokenizer.new("   hello world   "))
     assert_equal(["<a>", "<a>", "<a>"], 
-                 HtmlTokenizer.new("   <a>   <a>   <a>   ").to_a)
+                 HtmlTokenizer.new("   <a>   <a>   <a>   "))
   end
-
+  
+  def test_shift_until_text
+    assert_equal("hello", HtmlTokenizer.new("<table>hello</hello>")
+                 .shift_until_text.first)
+  end
 end
 
 
