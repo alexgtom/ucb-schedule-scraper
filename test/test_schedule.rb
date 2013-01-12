@@ -60,5 +60,6 @@ class HtmlTokenTests < Test::Unit::TestCase
     assert_equal('a', HtmlToken.new('</ a>').tag)
     assert_equal('a', HtmlToken.new('< / a>').tag)
     assert_equal('a', HtmlToken.new('< /a>').tag)
+    assert_equal(:text, HtmlToken.new('a').tag) 
   end
 end

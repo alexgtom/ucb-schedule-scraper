@@ -64,6 +64,8 @@ def read_page(url)
 
   while not tokenizer.empty?
     token = tokenizer.shift
+    p token.tag
+    p token
   end
 end
 
@@ -122,12 +124,16 @@ class HtmlToken < String
   def initialize(str)
     str.strip!
     super(str)
-
-    match = self.match(/^<\s*\/?\s*(#{HTML_TAG_REGEX})/)
-    if match
-      @tag = match[1]
+  
+    if str[0] != '<'
+      @tag = :text
     else
-      @tag = nil
+      match = self.match(/^<\s*\/?\s*(#{HTML_TAG_REGEX})/)
+      if match
+        @tag = match[1]
+      else
+        @tag = nil
+      end
     end
   end
 
