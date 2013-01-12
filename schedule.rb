@@ -72,9 +72,6 @@ class HtmlTokenizer < Array
   def initialize(page)
     @char_pos = 0
 
-    # strip leading and ending whitespace
-    page.strip!
-  
     # tokenize
     while @char_pos < page.length
       curr_char = page[@char_pos]
