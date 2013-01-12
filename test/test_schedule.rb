@@ -10,15 +10,6 @@ class ScheduleTests < Test::Unit::TestCase
 end
 
 class HtmlTokenizerTests < Test::Unit::TestCase
-  def test_tag_name
-    assert_equal('a', tag_name('<a>'))
-    assert_equal('a', tag_name('<a href="">'))
-    assert_equal('a', tag_name('</a>'))
-    assert_equal('a', tag_name('</ a>'))
-    assert_equal('a', tag_name('< / a>'))
-    assert_equal('a', tag_name('< /a>'))
-  end
-
   def test_output_tokens
     assert_equal(["<table>", "</table>"], 
                  HtmlTokenizer.new("<table></table>").to_a)
@@ -48,12 +39,25 @@ class HtmlTokenizerTests < Test::Unit::TestCase
                  HtmlTokenizer.new("   <a>   <a>   <a>   ").to_a)
   end
 
-  def test_attribute_value
-    assert_equal("b", attribute_value('<a href="b">', 'href')) 
-    assert_equal("b", attribute_value('  <  a href="b">  ', 'href')) 
-    assert_equal("b", attribute_value('<a href=\'b\'>', 'href')) 
-    assert_equal("_blank", attribute_value('<a href="b" target=\'_blank\'>', 
-                                           'target')) 
-    assert_equal(nil, attribute_value('<a>', 'href')) 
+end
+
+
+class HtmlTokenTests < Test::Unit::TestCase
+  def test_attribute
+    assert_equal("b", HtmlToken.new('<a href="b">')['href']) 
+    assert_equal("b", HtmlToken.new('  <  a href="b">  ')['href']) 
+    assert_equal("b", HtmlToken.new('<a href=\'b\'>')['href']) 
+    assert_equal("_blank", 
+                 HtmlToken.new('<a href="b" target=\'_blank\'>')['target']) 
+    assert_equal(nil, HtmlToken.new('<a>')['href']) 
+  end
+
+  def test_tag
+    assert_equal('a', HtmlToken.new('<a>').tag)
+    assert_equal('a', HtmlToken.new('<a href="">').tag)
+    assert_equal('a', HtmlToken.new('</a>').tag)
+    assert_equal('a', HtmlToken.new('</ a>').tag)
+    assert_equal('a', HtmlToken.new('< / a>').tag)
+    assert_equal('a', HtmlToken.new('< /a>').tag)
   end
 end

@@ -46,8 +46,8 @@ SCHEDULE_URL = "http://osoc.berkeley.edu/OSOC/osoc?"
 
 HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
 HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
-HTML_ATTRIBUTE_SINGLE_QUOTES = /'[^']+''/
-HTML_ATTRIBUTE_DOUBLE_QUOTES = /""[^"]+""/
+HTML_ATTRIBUTE_SINGLE_QUOTES = /'([^']+)'/
+HTML_ATTRIBUTE_DOUBLE_QUOTES = /"([^"]+)"/
 
 def schedule_url(params={})
   # adds "p_ to beginning of each key in params
@@ -67,37 +67,6 @@ def read_page(url)
   end
 end
 
-def tag_name(token)
-  token = token.strip.slice(1..-1).strip
-
-  if token != '/'
-    token.match(HTML_TAG_REGEX)[0].downcase
-  else
-    tag_name(token) 
-  end
-end
-
-def attribute_value(token, attr)
-  token.strip!
-  
-  match = token.match(/#{attr}\s*=\s*/i) 
-  return nil if match == nil
-
-  match = match[0]
-  char_pos = (token =~ /#{match}/) + match.length
-  token = token[char_pos..-1]
-
-  if token =~ HTML_ATTRIBUTE_SINGLE_QUOTES
-    token.match(HTML_ATTRIBUTE_SINGLE_QUOTES)[0][1..-2]
-  elsif token =~ HTML_ATTRIBUTE_DOUBLE_QUOTES
-    token.match(HTML_ATTRIBUTE_DOUBLE_QUOTES)[0][1..-2]
-  elsif token =~ HTML_ATTRIBUTE_NO_QUOTES
-    token.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
-  else
-    nil
-  end
-
-end
 
 class HtmlTokenizer < Array
   def initialize(page)
@@ -131,7 +100,7 @@ class HtmlTokenizer < Array
     token << page[@char_pos] if @char_pos < page.length
     @char_pos += 1
 
-    self << token
+    self << HtmlToken.new(token)
   end
 
   def text_token(page)
@@ -147,9 +116,44 @@ class HtmlTokenizer < Array
     
     # prevent blank tokens from being added to token list
     if token.strip.length > 0
-      self << token.strip
+      self << HtmlToken.new(token.strip)
     end
   end
+end
+
+class HtmlToken < String
+  def initialize(str)
+    str.strip!
+    super(str)
+
+    match = self.match(/^<\s*\/?\s*(#{HTML_TAG_REGEX})/)
+    if match
+      @tag = match[1]
+    else
+      @tag = nil
+    end
+  end
+
+  def [](attr)
+    attr = attr.to_s
+
+    m = self.match(/^.*#{attr}\s*=\s*/im)
+    return nil if m == nil
+    
+    token = self.slice(m[0].length..-1)
+
+    if token.chr == '\''
+      token.match(HTML_ATTRIBUTE_SINGLE_QUOTES)[1]
+    elsif token.chr == '"'
+      token.match(HTML_ATTRIBUTE_DOUBLE_QUOTES)[1]
+    elsif token != ' '
+      token.match(HTML_ATTRIBUTE_NO_QUOTES)[0]
+    else
+      nil
+    end
+  end
+
+  attr_reader :tag
 end
 
 
