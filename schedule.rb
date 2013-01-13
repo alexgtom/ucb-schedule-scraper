@@ -63,19 +63,19 @@ class Query < Array
 
     tokenizer = HtmlTokenizer.new(content)
 
-    ## header
-    #header_tokenizer = tokenizer.shift_until("/table")
-    #header_tokenizer << tokenizer.shift # deletes "</table>"
+    # header
+    header_tokenizer = tokenizer.shift_until("/table")
+    header_tokenizer << tokenizer.shift # deletes "</table>"
 
-    ## footer
-    #footer_tokenizer = tokenizer.pop_until("table")
+    # footer
+    footer_tokenizer = tokenizer.pop_until("table")
 
-    ## sections
-    #while tokenizer.shift_until("table")
-    #  break if (section_tokenizer = tokenizer.shift_until("/table")) == nil
-    #  section_tokenizer << tokenizer.shift
-    #  p section_tokenizer
-    #end
+    # sections
+    while tokenizer.shift_until("table")
+      break if (section_tokenizer = tokenizer.shift_until("/table")) == nil
+      section_tokenizer << tokenizer.shift
+      p section_tokenizer
+    end
   end
 end
 
@@ -122,7 +122,7 @@ class HtmlTokenizer < Array
     return nil if self.size == 0
 
     tokenizer = HtmlTokenizer.new('')
-    while self.first.tag != attr
+    while self.size > 0 and self.first.tag != attr
       tokenizer << self.shift
     end
     
