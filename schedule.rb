@@ -63,6 +63,11 @@ class Query < Array
 
     tokenizer = HtmlTokenizer.new(content)
 
+    # header
+    tokenizer.shift_until("table")
+    header_tokens = tokenizer.shift_until("/table")
+    
+    # sections
     while not tokenizer.empty?
       if tokenizer.first =~ /^Course:/
         self << Section.new(tokenizer)
@@ -114,12 +119,12 @@ class HtmlTokenizer < Array
 
   def shift_until(attr)
     # shifts the tokens over until the next :text token
-    arr = []
+    tokenizer = HtmlTokenizer.new('')
     while self.first.tag.to_s != attr.to_s
-      arr << self.shift
+      tokenizer << self.shift
     end
 
-    arr
+    tokenizer 
   end
 
   private
