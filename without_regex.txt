@@ -1,0 +1,35 @@
+alexgtom@unknownb8f6b1151f47 ucb-scraper (regex) $ time ./schedule.rb 
+{}
+[]
+
+real	0m0.908s
+user	0m0.893s
+sys	0m0.013s
+alexgtom@unknownb8f6b1151f47 ucb-scraper (regex) $ time ./schedule.rb 
+{}
+[]
+
+real	0m0.893s
+user	0m0.880s
+sys	0m0.010s
+alexgtom@unknownb8f6b1151f47 ucb-scraper (regex) $ time ./schedule.rb 
+{}
+[]
+
+real	0m0.905s
+user	0m0.891s
+sys	0m0.012s
+alexgtom@unknownb8f6b1151f47 ucb-scraper (regex) $ time ./schedule.rb 
+{}
+[]
+
+real	0m0.916s
+user	0m0.898s
+sys	0m0.015s
+alexgtom@unknownb8f6b1151f47 ucb-scraper (regex) $ time ./schedule.rb 
+{}
+[]
+
+real	0m0.918s
+user	0m0.904s
+sys	0m0.012s
