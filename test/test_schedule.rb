@@ -43,6 +43,10 @@ class HtmlTokenizerTests < Test::Unit::TestCase
     t = HtmlTokenizer.new("<a><b><table>hello</hello>")
     assert_equal(["<a>", "<b>", "<table>"], t.shift_until(:text))
     assert_equal("hello", t.first)
+
+    t = HtmlTokenizer.new("")
+    assert_equal(nil, t.shift_until(:text))
+
   end
 end
 
