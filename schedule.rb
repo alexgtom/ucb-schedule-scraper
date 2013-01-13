@@ -71,9 +71,11 @@ class Query < Array
     footer_tokenizer = tokenizer.pop_until("table")
 
     # sections
-    while tokenizer.shift_until("table")
-      break if (section_tokenizer = tokenizer.shift_until("/table")) == nil
+    while tokenizer.shift_until("table") and tokenizer.size > 0
+      section_tokenizer = tokenizer.shift_until("/table")
       section_tokenizer << tokenizer.shift
+
+
       p section_tokenizer
     end
   end
