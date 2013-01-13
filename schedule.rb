@@ -153,8 +153,6 @@ class Section
         text_tokens.shift
       end
     end
-    p text_tokens
-    p input_tokens
   end
 
   private
