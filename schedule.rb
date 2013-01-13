@@ -118,7 +118,7 @@ class HtmlTokenizer < Array
     return nil if self.size == 0
 
     tokenizer = HtmlTokenizer.new('')
-    while self.first.tag.to_s != attr.to_s
+    while self.first.tag != attr
       tokenizer << self.shift
     end
     
@@ -127,6 +127,17 @@ class HtmlTokenizer < Array
     else
       nil
     end
+  end
+
+  def find_tag_index(attr)
+    # finds the location of the first occurance of attr
+    self.each_with_index do |elem, i|
+      if elem.tag == attr
+        return i
+      end
+    end
+
+    nil
   end
 
   private
@@ -163,17 +174,33 @@ class HtmlTokenizer < Array
   end
 end
 
+class HtmlTag < String
+  def initialize(str)
+    super(normalize_tag(str))
+  end
+
+  def ==(str)
+    self.to_s == normalize_tag(str)
+  end
+
+
+  private 
+  def normalize_tag(str)
+    str.to_s.downcase
+  end
+end
+
 class HtmlToken < String
   def initialize(str)
     str.strip!
     super(str)
   
     if str[0] != '<'
-      @tag = :text
+      @tag = HtmlTag.new(:text)
     else
       match = self.match(/^<\s*(\/?)\s*(#{HTML_TAG_REGEX})/)
       if match
-        @tag = match[1] + match[2]
+        @tag = HtmlTag.new(match[1] + match[2])
       else
         @tag = nil
       end
@@ -198,6 +225,7 @@ class HtmlToken < String
       nil
     end
   end
+
 
   attr_reader :tag
 end

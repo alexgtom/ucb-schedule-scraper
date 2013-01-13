@@ -9,6 +9,16 @@ class ScheduleTests < Test::Unit::TestCase
   end
 end
 
+class HtmlTagTests < Test::Unit::TestCase
+  def test_main
+    assert_equal('abc', HtmlTag.new('abc'))
+    assert_equal('abc', HtmlTag.new('ABC'))
+    assert_equal('abc', HtmlTag.new('AbC'))
+    assert_equal('abc', HtmlTag.new(:abc))
+    assert_equal('abc', HtmlTag.new(:aBc))
+  end
+end
+
 class HtmlTokenizerTests < Test::Unit::TestCase
   def test_output_tokens
     assert_equal(["<table>", "</table>"], 
@@ -48,6 +58,13 @@ class HtmlTokenizerTests < Test::Unit::TestCase
     assert_equal(nil, t.shift_until(:text))
 
   end
+
+  def test_find_tag_index
+    t = HtmlTokenizer.new("<a><b><table>hello</hello>")
+    assert_equal(0, t.find_tag_index('a') )
+    assert_equal(1, t.find_tag_index('b') )
+    assert_equal(4, t.find_tag_index('/hello') )
+  end
 end
 
 
@@ -70,6 +87,6 @@ class HtmlTokenTests < Test::Unit::TestCase
     assert_equal('/a', HtmlToken.new('</ a>').tag)
     assert_equal('/a', HtmlToken.new('< / a>').tag)
     assert_equal('/a', HtmlToken.new('< /a>').tag)
-    assert_equal(:text, HtmlToken.new('a').tag) 
+    assert_equal('text', HtmlToken.new('a').tag) 
   end
 end
