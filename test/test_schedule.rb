@@ -49,14 +49,22 @@ class HtmlTokenizerTests < Test::Unit::TestCase
                  HtmlTokenizer.new("   <a>   <a>   <a>   "))
   end
   
-  def test_shift_until_text
+  def test_shift_until
     t = HtmlTokenizer.new("<a><b><table>hello</hello>")
     assert_equal(["<a>", "<b>", "<table>"], t.shift_until(:text))
     assert_equal("hello", t.first)
 
     t = HtmlTokenizer.new("")
     assert_equal(nil, t.shift_until(:text))
+  end
 
+  def test_pop_until
+    t = HtmlTokenizer.new("<a><b><table>hello</hello>")
+    assert_equal(["<b>", "<table>", "hello", "</hello>"], t.pop_until(:b))
+    assert_equal("<a>", t.last)
+
+    t = HtmlTokenizer.new("")
+    assert_equal(nil, t.pop_until(:text))
   end
 
   def test_find_tag_index

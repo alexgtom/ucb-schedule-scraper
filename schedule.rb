@@ -140,6 +140,22 @@ class HtmlTokenizer < Array
     nil
   end
 
+  def pop_until(attr)
+    return nil if self.size == 0
+
+    tokenizer = HtmlTokenizer.new('')
+    while self.last.tag != attr
+      tokenizer.insert(0, self.pop)
+    end
+    tokenizer.insert(0, self.pop)
+    
+    if tokenizer.size > 0
+      tokenizer 
+    else
+      nil
+    end
+  end
+
   private
 
   def tag_token(page)
@@ -172,6 +188,8 @@ class HtmlTokenizer < Array
       self << HtmlToken.new(token.strip)
     end
   end
+
+
 end
 
 class HtmlTag < String
