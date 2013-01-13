@@ -55,7 +55,9 @@ class HtmlTokenizerTests < Test::Unit::TestCase
     assert_equal("hello", t.first)
 
     t = HtmlTokenizer.new("")
+    assert_equal([], t)
     assert_equal(nil, t.shift_until(:text))
+    assert_equal([], t)
   end
 
   def test_pop_until
@@ -64,7 +66,9 @@ class HtmlTokenizerTests < Test::Unit::TestCase
     assert_equal("<a>", t.last)
 
     t = HtmlTokenizer.new("")
+    assert_equal([], t)
     assert_equal(nil, t.pop_until(:text))
+    assert_equal([], t)
   end
 
   def test_find_tag_index

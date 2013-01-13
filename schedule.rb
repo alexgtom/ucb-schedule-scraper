@@ -63,15 +63,19 @@ class Query < Array
 
     tokenizer = HtmlTokenizer.new(content)
 
-    # header
-    tokenizer.shift_until("table")
-    header_tokenizer = tokenizer.shift_until("/table")
-    
-    # sections
-    begin
-      tokenizer.shift_until("table")
-      section_tokenizer = tokenizer.shift_until("/table")
-    end while section_tokenizer
+    ## header
+    #header_tokenizer = tokenizer.shift_until("/table")
+    #header_tokenizer << tokenizer.shift # deletes "</table>"
+
+    ## footer
+    #footer_tokenizer = tokenizer.pop_until("table")
+
+    ## sections
+    #while tokenizer.shift_until("table")
+    #  break if (section_tokenizer = tokenizer.shift_until("/table")) == nil
+    #  section_tokenizer << tokenizer.shift
+    #  p section_tokenizer
+    #end
   end
 end
 
@@ -144,7 +148,7 @@ class HtmlTokenizer < Array
     return nil if self.size == 0
 
     tokenizer = HtmlTokenizer.new('')
-    while self.last.tag != attr
+    while self.size > 0 and self.last.tag != attr
       tokenizer.insert(0, self.pop)
     end
     tokenizer.insert(0, self.pop)
@@ -264,7 +268,8 @@ if __FILE__ == $PROGRAM_NAME
 
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
-  Query.new('test/schedule_cases/section.html')
+  #Query.new('test/schedule_cases/section.html')
+  Query.new('test/schedule_cases/single_page.html')
 
 end
 
