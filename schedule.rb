@@ -69,37 +69,142 @@ class Query < Array
 
     # footer
     footer_tokenizer = tokenizer.pop_until("table")
-
     # sections
     while tokenizer.shift_until("table") and tokenizer.size > 0
       section_tokenizer = tokenizer.shift_until("/table")
       section_tokenizer << tokenizer.shift
 
-
-      p section_tokenizer
+      section = Section.new
+      section.parse(section_tokenizer)
     end
   end
 end
 
 class Section 
-  def initialize(tokenizer)
-    begin
-      course(tokenizer)                 if tokenizer.first =~ /^Course:/
-      course_title(tokenizer)           if tokenizer.first =~ /^Course Title:/
-      location(tokenizer)               if tokenizer.first =~ /^Location:/
-      instructor(tokenizer)             if tokenizer.first =~ /^Instructor:/
-      status_last_changed(tokenizer)    if tokenizer.first =~ /^Status\/Last Changed:/
-      course_control_number(tokenizer)  if tokenizer.first =~ /^Course Control Number:/
-      units_credit(tokenizer)           if tokenizer.first =~ /^Units\/Credit:/
-      final_exam_group(tokenizer)       if tokenizer.first =~ /^Final Exam Group:/
-      restrictions(tokenizer)           if tokenizer.first =~ /^Restrictions:/
-      note(tokenizer)                   if tokenizer.first =~ /^Note:/
-      enrollment_on(tokenizer)          if tokenizer.first =~ /^Enrollment on /
-      enrollment_information(tokenizer) if tokenizer.first =~ /^Enrollment /
-    end while tokenizer.first !=~ /^Course:/
+  def initialize
+    @department = nil
+    @department_abrev = nil
+    @course_num = nil
+    @course_control_numer = nil
+    @section_type = nil
+    @section_num = nil
+    @class_type = nil
+    @title = nil
+    @location = nil
+    @instructor = nil
+    @note = nil
+    @units = nil
+    @final_exam_group = nil
+    @restrictions = nil
+    @limit = nil
+    @enrolled = nil
+    @waitlist = nil
+    @available_seats = nil
+    @enrollment_message = nil
+    @status_last_changed = nil
+    @session_start = nil
+    @session_end = nil
+    @course_website = nil
+    @days = nil
+    @room = nil
+    @time = nil
+  end
+  def parse(tokenizer)
+    text_tokens = HtmlTokenizer.new('')
+    input_tokens = HtmlTokenizer.new('')
+    
+    # get text and input tokens
+    while tokenizer.first.tag != '/table'
+      token = tokenizer.shift
+      if token.tag == :text
+        text_tokens << token
+      elsif token.tag == :input
+        input_tokens << token 
+      end
+    end
+    
+    while text_tokens.size > 0
+      label = text_tokens.shift
+
+      if label =~ /^Course:/
+        course(text_tokens.shift)                 
+      elsif label =~ /^Course Title:/
+        course_title(text_tokens.shift)           
+      elsif label =~ /^Location:/
+        location(text_tokens.shift)               
+      elsif label =~ /^Instructor:/
+        instructor(text_tokens.shift)             
+      elsif label =~ /^Status\/Last Changed:/
+        status_last_changed(text_tokens.shift)    
+      elsif label =~ /^Course Control Number:/
+        course_control_number(text_tokens.shift)  
+      elsif label =~ /^Units\/Credit:/
+        units_credit(text_tokens.shift)           
+      elsif label =~ /^Final Exam Group:/
+        final_exam_group(text_tokens.shift)       
+      elsif label =~ /^Restrictions:/
+        restrictions(text_tokens.shift)           
+      elsif label =~ /^Note:/
+        note(text_tokens.shift)                   
+      elsif label =~ /^Enrollment on /
+        enrollment_on_date(label)
+        enrollment(text_tokens.shift)          
+      else
+        text_tokens.shift
+      end
+    end
+    p text_tokens
+    p input_tokens
   end
 
   private
+
+  def course(str)
+  end
+
+  def course_title(str)
+
+  end
+
+  def location(str)
+
+  end
+
+  def instructor(str)
+
+  end
+
+  def status_last_changed(str)
+
+  end
+
+  def course_control_number(str)
+
+  end
+
+  def units_credit(str)
+
+  end
+
+  def final_exam_group(str)
+
+  end
+
+  def restrictions(str)
+
+  end
+
+  def note(str)
+
+  end
+
+  def enrollment_on_date(str)
+
+  end
+
+  def enrollment(str)
+
+  end
 end
 
 
