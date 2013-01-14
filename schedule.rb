@@ -80,65 +80,44 @@ class Query < Array
       self << section
     end
   end
+
 end
 
 class Section 
-  attr_reader :department           
-  attr_reader :department_abrev     
-  attr_reader :course_num           
-  attr_reader :course_control_numer 
-  attr_reader :section_type         
-  attr_reader :ps
-  attr_reader :section_num          
-  attr_reader :class_type           
-  attr_reader :title                
-  attr_reader :location             
-  attr_reader :instructor           
-  attr_reader :note                 
-  attr_reader :units                
-  attr_reader :final_exam_group     
-  attr_reader :restrictions         
-  attr_reader :limit                
-  attr_reader :enrolled             
-  attr_reader :waitlist             
-  attr_reader :available_seats      
-  attr_reader :enrollment_message   
-  attr_reader :enrollment_updated
-  attr_reader :status_last_changed  
-  attr_reader :session_start        
-  attr_reader :session_end          
-  attr_reader :course_website       
-  attr_reader :days                 
-  attr_reader :time                 
+  @@attributes = [
+      :department, 
+      :department_abrev, 
+      :course_num, 
+      :course_control_numer, 
+      :section_type, 
+      :ps, 
+      :section_num, 
+      :class_type, 
+      :title, 
+      :location, 
+      :instructor, 
+      :note, 
+      :units, 
+      :final_exam_group, 
+      :restrictions, 
+      :limit, 
+      :enrolled, 
+      :waitlist, 
+      :available_seats, 
+      :enrollment_message, 
+      :enrollment_updated, 
+      :status_last_changed, 
+      :session_start, 
+      :session_end, 
+      :course_website, 
+      :days, 
+      :time, 
+  ]
+
+  @@attributes.each { |attr| attr_reader attr }
 
   def initialize
-    @department           = nil
-    @department_abrev     = nil
-    @course_num           = nil
-    @course_control_numer = nil
-    @section_type         = nil
-    @ps                   = nil
-    @section_num          = nil
-    @class_type           = nil
-    @title                = nil
-    @location             = nil
-    @instructor           = nil
-    @note                 = nil
-    @units                = nil
-    @final_exam_group     = nil
-    @restrictions         = nil
-    @limit                = nil
-    @enrolled             = nil
-    @waitlist             = nil
-    @available_seats      = nil
-    @enrollment_message   = nil
-    @enrollment_updated   = nil
-    @status_last_changed  = nil
-    @session_start        = nil
-    @session_end          = nil
-    @course_website       = nil
-    @days                 = nil
-    @time                 = nil
+    @@attributes.each { |attr| self.instance_variable_set("@#{attr.to_s}", nil)}
   end
 
   def parse_table(str)
@@ -181,7 +160,6 @@ class Section
   private
 
   def parse_course(str)
-    p str
     match = str.match("(.+) (.+) (.) (.+) (...)")
     @department = match[1]
     @course_num = match[2]
@@ -246,6 +224,12 @@ class Section
       @available_seats = match[4]
     end
   end
+
+  def to_s
+    "[ #{@@attributes.map{ 
+      |attr| "#{attr.to_s}: \"#{self.instance_variable_get("@#{attr.to_s}")}\""
+    }.join(', ')} ]"
+  end
 end
 
 
@@ -265,7 +249,7 @@ if __FILE__ == $PROGRAM_NAME
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
-  Query.new('test/schedule_cases/multi_page_1.html')
+  p Query.new('test/schedule_cases/multi_page_1.html')
 
 end
 
