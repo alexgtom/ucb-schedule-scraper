@@ -70,6 +70,9 @@ class Query < Array
       section.parse_table(table)
       self << section
     end
+  end
+
+  def parse_page(urL)
 
   end
 end
@@ -186,8 +189,8 @@ class Section
   end
 
   def parse_location(str)
-    if str == "CANCELLED"
-      @days = @location = @time = "CANCELLED"
+    if match = str.match("(CANCELLED|UNSCHED NOFACILITY|TBA)")
+      @days = @location = @time = match[1]
     elsif match = str.match("((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)")
       @location = match[4]
       @days = match[2]

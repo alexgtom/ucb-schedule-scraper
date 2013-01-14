@@ -59,6 +59,16 @@ class SectionTests < Test::Unit::TestCase
     assert_equal("CANCELLED", @section.days) 
     assert_equal("CANCELLED", @section.location) 
     assert_equal("CANCELLED", @section.time) 
+
+    @section.send(:parse_location, "UNSCHED NOFACILITY")
+    assert_equal("UNSCHED NOFACILITY", @section.days) 
+    assert_equal("UNSCHED NOFACILITY", @section.location) 
+    assert_equal("UNSCHED NOFACILITY", @section.time) 
+
+    @section.send(:parse_location, "TBA")
+    assert_equal("TBA", @section.days) 
+    assert_equal("TBA", @section.location) 
+    assert_equal("TBA", @section.time) 
   end
 
   def test_parse_enrollment
