@@ -42,7 +42,7 @@ require 'open-uri'
 #   Status/Last Changed
 #       http://osoc.berkeley.edu/OSOC/osoc?p_term=FL&p_updt=UPDATED
 
-SCHEDULE_URL = "http://osoc.berkeley.edu/OSOC/osoc?"
+SCHEDULE_URL = "http://osoc.berkeley.edu"
 HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
 HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
 HTML_ATTRIBUTE_SINGLE_QUOTES = /'([^']+)'/
@@ -53,7 +53,7 @@ def schedule_url(params={})
   # adds "p_ to beginning of each key in params
   renamed_params = Hash[params.map {|k, v| ["p_#{k.to_s}", v]}]
 
-  "#{SCHEDULE_URL}#{URI.encode_www_form(renamed_params)}"
+  "#{SCHEDULE_URL}/OSOC/osoc?#{URI.encode_www_form(renamed_params)}"
 end
 
 class Query < Array
@@ -69,15 +69,20 @@ class Query < Array
     header_table = tables.shift
     footer_table = tables.pop
 
-    if match = footer_table.match("<A HREF=\"([^\"]*)\">.*see next results")
-      next_url = match[1] 
-      parse_page(next_url)
-    end
-
     tables.each do |table|
       section = Section.new
       section.parse_table(table)
       self << section
+    end
+
+    if match = footer_table.match("<A HREF=\"([^\"]*)\">.*see next results")
+      next_url = match[1] 
+      if next_url[0] = '/'
+        # if the url found is in the format "/OSOC/osoc?attr=value", fix it
+        next_url = "#{SCHEDULE_URL}#{next_url}"
+        p self.size
+      end
+      parse_page(next_url)
     end
   end
 
@@ -249,7 +254,11 @@ if __FILE__ == $PROGRAM_NAME
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
-  p Query.new('test/schedule_cases/multi_page_1.html')
+  #Query.new('test/schedule_cases/single_page.html')
+  #Query.new('test/schedule_cases/multi_page_1.html')
+  url = schedule_url(:term => "FL", :classif => "O")
+  p url
+  p "Total Courses: #{Query.new(url).size}"
 
 end
 
