@@ -186,10 +186,13 @@ class Section
   end
 
   def parse_location(str)
-    match = str.match("((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)")
-    @location = match[4]
-    @days = match[2]
-    @time = match[3]
+    if str == "CANCELLED"
+      @days = @location = @time = "CANCELLED"
+    elsif match = str.match("((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)")
+      @location = match[4]
+      @days = match[2]
+      @time = match[3]
+    end
   end
 
   def parse_instructor(str)
@@ -225,11 +228,14 @@ class Section
   end
 
   def parse_enrollment(str)
-    match = str.match("Limit:([0-9]+) Enrolled:([0-9]+) Waitlist:([0-9]+) Avail Seats:([0-9]+)")
-    @limit = match[1]
-    @enrolled = match[2]
-    @waitlist = match[3]
-    @available_seats = match[4]
+    if str == "SEE DEPT"
+      @limit = @enrolled = @waitlist = @available_seats = "SEE DEPT"   
+    elsif match = str.match("Limit:([0-9]+) Enrolled:([0-9]+) Waitlist:([0-9]+) Avail Seats:([0-9]+)")
+      @limit = match[1]
+      @enrolled = match[2]
+      @waitlist = match[3]
+      @available_seats = match[4]
+    end
   end
 end
 
