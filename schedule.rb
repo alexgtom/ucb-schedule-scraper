@@ -75,33 +75,62 @@ class Query < Array
 end
 
 class Section 
+  attr_reader :department           
+  attr_reader :department_abrev     
+  attr_reader :course_num           
+  attr_reader :course_control_numer 
+  attr_reader :section_type         
+  attr_reader :ps
+  attr_reader :section_num          
+  attr_reader :class_type           
+  attr_reader :title                
+  attr_reader :location             
+  attr_reader :instructor           
+  attr_reader :note                 
+  attr_reader :units                
+  attr_reader :final_exam_group     
+  attr_reader :restrictions         
+  attr_reader :limit                
+  attr_reader :enrolled             
+  attr_reader :waitlist             
+  attr_reader :available_seats      
+  attr_reader :enrollment_message   
+  attr_reader :enrollment_updated
+  attr_reader :status_last_changed  
+  attr_reader :session_start        
+  attr_reader :session_end          
+  attr_reader :course_website       
+  attr_reader :days                 
+  attr_reader :time                 
+
   def initialize
-    @department = nil
-    @department_abrev = nil
-    @course_num = nil
+    @department           = nil
+    @department_abrev     = nil
+    @course_num           = nil
     @course_control_numer = nil
-    @section_type = nil
-    @section_num = nil
-    @class_type = nil
-    @title = nil
-    @location = nil
-    @instructor = nil
-    @note = nil
-    @units = nil
-    @final_exam_group = nil
-    @restrictions = nil
-    @limit = nil
-    @enrolled = nil
-    @waitlist = nil
-    @available_seats = nil
-    @enrollment_message = nil
-    @status_last_changed = nil
-    @session_start = nil
-    @session_end = nil
-    @course_website = nil
-    @days = nil
-    @room = nil
-    @time = nil
+    @section_type         = nil
+    @ps                   = nil
+    @section_num          = nil
+    @class_type           = nil
+    @title                = nil
+    @location             = nil
+    @instructor           = nil
+    @note                 = nil
+    @units                = nil
+    @final_exam_group     = nil
+    @restrictions         = nil
+    @limit                = nil
+    @enrolled             = nil
+    @waitlist             = nil
+    @available_seats      = nil
+    @enrollment_message   = nil
+    @enrollment_updated   = nil
+    @status_last_changed  = nil
+    @session_start        = nil
+    @session_end          = nil
+    @course_website       = nil
+    @days                 = nil
+    @time                 = nil
   end
 
   def parse_table(str)
@@ -109,86 +138,98 @@ class Section
     str.gsub!(/(<\/?[^>]+>|\n|&#[0-9]+;|&nbsp;?)/, '')
     str.gsub!(/\s+/, ' ')
 
-    text_tokens = str.split(SEPERATOR)
+    text_tokens = str.split(SEPERATOR).map{|token| token.strip}
+
 
     while text_tokens.size > 0
       label = text_tokens.shift
       if label =~ /^Course:/
-        course(text_tokens.shift)                 
+        parse_course(text_tokens.shift)                 
       elsif label =~ /^Course Title:/
-        course_title(text_tokens.shift)           
+        parse_course_title(text_tokens.shift)           
       elsif label =~ /^Location:/
-        location(text_tokens.shift)               
+        parse_location(text_tokens.shift)               
       elsif label =~ /^Instructor:/
-        instructor(text_tokens.shift)             
+        parse_instructor(text_tokens.shift)             
       elsif label =~ /^Status\/Last Changed:/
-        status_last_changed(text_tokens.shift)    
+        parse_status_last_changed(text_tokens.shift)    
       elsif label =~ /^Course Control Number:/
-        course_control_number(text_tokens.shift)  
+        parse_course_control_number(text_tokens.shift)  
       elsif label =~ /^Units\/Credit:/
-        units_credit(text_tokens.shift)           
+        parse_units_credit(text_tokens.shift)           
       elsif label =~ /^Final Exam Group:/
-        final_exam_group(text_tokens.shift)       
+        parse_final_exam_group(text_tokens.shift)       
       elsif label =~ /^Restrictions:/
-        restrictions(text_tokens.shift)           
+        parse_restrictions(text_tokens.shift)           
       elsif label =~ /^Note:/
-        note(text_tokens.shift)                   
+        parse_note(text_tokens.shift)                   
       elsif label =~ /^Enrollment on /
-        enrollment_on_date(label)
-        enrollment(text_tokens.shift)          
-      else
-        text_tokens.shift
+        parse_enrollment_on_date(label)
+        parse_enrollment(text_tokens.shift)          
       end
     end
   end
 
   private
 
-  def course(str)
+  def parse_course(str)
+    match = str.match("(.+) (.+) (.) (...) (...)")
+    @department = match[1]
+    @course_num = match[2]
+    @ps = match[3]
+    @section_num = match[4]
+    @section_type = match[5]
   end
 
-  def course_title(str)
-
+  def parse_course_title(str)
+    @title = str
   end
 
-  def location(str)
-
+  def parse_location(str)
+    match = str.match("((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)")
+    @location = match[4]
+    @days = match[2]
+    @time = match[3]
   end
 
-  def instructor(str)
-
+  def parse_instructor(str)
+    @instructor = str
   end
 
-  def status_last_changed(str)
-
+  def parse_status_last_changed(str)
+    @status_last_changed = str
   end
 
-  def course_control_number(str)
-
+  def parse_course_control_number(str)
+    @course_control_numer = str
   end
 
-  def units_credit(str)
-
+  def parse_units_credit(str)
+    @units = str
   end
 
-  def final_exam_group(str)
-
+  def parse_final_exam_group(str)
+    @final_exam_group = str
   end
 
-  def restrictions(str)
-
+  def parse_restrictions(str)
+    @restrictions = str
   end
 
-  def note(str)
-
+  def parse_note(str)
+    @note = str
   end
 
-  def enrollment_on_date(str)
-
+  def parse_enrollment_on_date(str)
+    @enrollment_updated = str.match("([0-9]+\/[0-9]+\/[0-9]+):$")[1]
   end
 
-  def enrollment(str)
-
+  def parse_enrollment(str)
+    match = str.match("Limit:([0-9]+) Enrolled:([0-9]+) Waitlist:([0-9]+) Avail Seats:([0-9]+)")
+    @limit = match[1]
+    @enrolled = match[2]
+    @waitlist = match[3]
+    @available_seats = match[4]
   end
 end
 
