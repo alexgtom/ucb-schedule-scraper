@@ -72,6 +72,11 @@ class SectionTests < Test::Unit::TestCase
   end
 
   def test_parse_enrollment
+    @section.send(:parse_enrollment, "SEE DEPT")
+    assert_equal("SEE DEPT", @section.limit)
+    assert_equal("SEE DEPT", @section.enrolled)
+    assert_equal("SEE DEPT", @section.waitlist)
+    assert_equal("SEE DEPT", @section.available_seats)
     
   end
 end

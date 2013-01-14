@@ -58,6 +58,10 @@ end
 
 class Query < Array
   def initialize(url)
+    parse_page(url)
+  end
+
+  def parse_page(url)
     file = open(url)
     content = file.read
     
@@ -65,15 +69,13 @@ class Query < Array
     header_table = tables.shift
     footer_table = tables.pop
 
+    p header_table
+
     tables.each do |table|
       section = Section.new
       section.parse_table(table)
       self << section
     end
-  end
-
-  def parse_page(urL)
-
   end
 end
 
