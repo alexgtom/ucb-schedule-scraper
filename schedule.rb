@@ -69,7 +69,10 @@ class Query < Array
     header_table = tables.shift
     footer_table = tables.pop
 
-    p header_table
+    if match = footer_table.match("<A HREF=\"([^\"]*)\">.*see next results")
+      next_url = match[1] 
+      parse_page(next_url)
+    end
 
     tables.each do |table|
       section = Section.new
@@ -178,7 +181,8 @@ class Section
   private
 
   def parse_course(str)
-    match = str.match("(.+) (.+) (.) (...) (...)")
+    p str
+    match = str.match("(.+) (.+) (.) (.+) (...)")
     @department = match[1]
     @course_num = match[2]
     @ps = match[3]
@@ -261,7 +265,7 @@ if __FILE__ == $PROGRAM_NAME
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
-  Query.new('test/schedule_cases/single_page.html')
+  Query.new('test/schedule_cases/multi_page_1.html')
 
 end
 

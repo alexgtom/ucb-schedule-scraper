@@ -79,4 +79,13 @@ class SectionTests < Test::Unit::TestCase
     assert_equal("SEE DEPT", @section.available_seats)
     
   end
+
+  def test_parse_course
+    @section.send(:parse_course, "COMPUTER SCIENCE 399 P 1-29 IND")
+    assert_equal("COMPUTER SCIENCE", @section.department)
+    assert_equal("399", @section.course_num)
+    assert_equal("P", @section.ps)
+    assert_equal("1-29", @section.section_num)
+    assert_equal("IND", @section.section_type)
+  end
 end
