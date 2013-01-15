@@ -69,23 +69,47 @@ class Query < Array
     header_table = tables.shift
     footer_table = tables.pop
 
+    header = Header.new
+    header.parse_table(header_table)
+
     tables.each do |table|
       section = Section.new
       section.parse_table(table)
       self << section
     end
+    
+    parse_page(header.next_url) if header.next_url
+  end
+end
 
-    if match = footer_table.match("<A HREF=\"([^\"]*)\">.*see next results")
-      next_url = match[1] 
-      if next_url[0] = '/'
+class Header
+  attr_reader :next_url, :num_matches
+  def initialize
+    @next_url = nil
+    @num_matches = nil
+  end
+
+  def parse_table(str)
+    parse_next_url(str)
+    parse_num_matches(str)
+  end
+  
+  private 
+
+  def parse_next_url(str)
+    if match = str.match("<A HREF=\"([^\"]*)\">.*see next results")
+      @next_url = match[1] 
+      if next_url[0] == '/'
         # if the url found is in the format "/OSOC/osoc?attr=value", fix it
-        next_url = "#{SCHEDULE_URL}#{next_url}"
-        p self.size
+        @next_url = "#{SCHEDULE_URL}#{next_url}"
       end
-      parse_page(next_url)
     end
   end
 
+  def parse_num_matches(str)
+    match = str.match("Displaying [0-9\-]+ of ([0-9]+) matches to your request for ")
+    @num_matches = match[1]
+  end
 end
 
 class Section 
@@ -255,10 +279,10 @@ if __FILE__ == $PROGRAM_NAME
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
   #Query.new('test/schedule_cases/single_page.html')
-  #Query.new('test/schedule_cases/multi_page_1.html')
-  url = schedule_url(:term => "FL", :classif => "O")
-  p url
-  p "Total Courses: #{Query.new(url).size}"
+  Query.new('test/schedule_cases/multi_page_1.html')
+  #url = schedule_url(:term => "FL", :classif => "O")
+  #p url
+  #p "Total Courses: #{Query.new(url).size}"
 
 end
 
