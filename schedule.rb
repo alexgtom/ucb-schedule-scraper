@@ -63,33 +63,32 @@ end
 
 class Query < Array
   @@row_title =  {
-      :department => "",
-      :department_abrev => "", 
-      :course_num => "",
-      :course_control_numer => "",
-      :section_type => "",
-      :ps => "",
-      :section_num => "",
-      :class_type => "",
-      :title => "",
-      :location => "",
-      :instructor => "",
-      :note => "",
-      :units => "",
-      :final_exam_group => "",
-      :restrictions => "",
-      :limit => "",
-      :enrolled => "",
-      :waitlist => "",
-      :available_seats => "",
-      :enrollment_message => "",
-      :enrollment_updated => "",
-      :status_last_changed => "",
-      :session_start => "",
-      :session_end => "",
-      :course_website => "",
-      :days => "",
-      :time => "",
+      :department => "Department",
+      :department_abrev => "Dept. Abrev.", 
+      :course_num => "Course Num",
+      :course_control_numer => "CCN",
+      :section_type => "Type",
+      :ps => "P/S",
+      :section_num => "Section Num",
+      :title => "Title",
+      :location => "Location",
+      :instructor => "Instructor",
+      :note => "Note",
+      :units => "Units",
+      :final_exam_group => "Final Exam Group",
+      :restrictions => "Restrictions",
+      :limit => "Limit",
+      :enrolled => "Enrolled",
+      :waitlist => "Waitlist",
+      :available_seats => "Avail. Seats",
+      :enrollment_message => "Enrollment Msg.",
+      :enrollment_updated => "Enrollment Updated",
+      :status_last_changed => "Last Changed",
+      :session_start => "Session Start",
+      :session_end => "Session End",
+      :course_website => "Course Website",
+      :days => "Days",
+      :time => "Time",
   } 
 
   def initialize(parameters={}, options={:attributes => Section.attributes})
@@ -139,7 +138,7 @@ class Query < Array
     @attributes.each do |attr|
       max_size[attr] = (self.map{ |section| 
         truncate(section.send(attr).to_s).size 
-        } + [truncate(attr.to_s).size])
+        } + [truncate(@@row_title[attr]).size])
       .max
     end
     
@@ -200,7 +199,6 @@ class Section
       :section_type, 
       :ps, 
       :section_num, 
-      :class_type, 
       :title, 
       :location, 
       :instructor, 
@@ -368,7 +366,7 @@ if __FILE__ == $PROGRAM_NAME
   #Query.new('test/schedule_cases/section.html')
   #Query.new('test/schedule_cases/single_page.html')
   #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units]}).print_tabular
-  Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :units]}).print_tabular
+  Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"
