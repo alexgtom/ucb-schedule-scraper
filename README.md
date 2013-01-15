@@ -32,3 +32,8 @@ Will output the following:
                   ... |  ... |   ... |                               ... |               ... |          ...
     
     
+Test Suite
+==========
+The test suite can be ran by doing
+
+     rake test
