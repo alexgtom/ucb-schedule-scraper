@@ -58,7 +58,10 @@ end
 
 class Query < Array
   def initialize(url)
+    @num_matches = 0
     parse_page(url)
+
+    print_progress
   end
 
   def parse_page(url)
@@ -71,14 +74,22 @@ class Query < Array
 
     header = Header.new
     header.parse_table(header_table)
+    
+    @num_matches = header.num_matches
+
+    print_progress
 
     tables.each do |table|
       section = Section.new
       section.parse_table(table)
       self << section
     end
-    
+
     parse_page(header.next_url) if header.next_url
+  end
+
+  def print_progress
+    $stderr.puts "#{self.size} out of #{@num_matches} courses processed"
   end
 end
 
