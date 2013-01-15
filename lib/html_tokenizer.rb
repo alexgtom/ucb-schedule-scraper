@@ -1,3 +1,8 @@
+HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
+HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
+HTML_ATTRIBUTE_SINGLE_QUOTES = /'([^']+)'/
+HTML_ATTRIBUTE_DOUBLE_QUOTES = /"([^"]+)"/
+
 class HtmlTokenizer < Array
   def initialize(page)
     @char_pos = 0

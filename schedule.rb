@@ -43,11 +43,8 @@ require 'open-uri'
 #       http://osoc.berkeley.edu/OSOC/osoc?p_term=FL&p_updt=UPDATED
 
 SCHEDULE_URL = "http://osoc.berkeley.edu"
-HTML_TAG_REGEX = /[a-zA-Z][a-zA-Z0-9]*/
-HTML_ATTRIBUTE_NO_QUOTES = /[^\s"']+/
-HTML_ATTRIBUTE_SINGLE_QUOTES = /'([^']+)'/
-HTML_ATTRIBUTE_DOUBLE_QUOTES = /"([^"]+)"/
 SEPERATOR = "****"
+MAX_COL_SIZE = 50
 
 def schedule_url(params={})
   # adds "p_ to beginning of each key in params
@@ -56,10 +53,54 @@ def schedule_url(params={})
   "#{SCHEDULE_URL}/OSOC/osoc?#{URI.encode_www_form(renamed_params)}"
 end
 
+def truncate(str, max_length=MAX_COL_SIZE)
+  if str.length > MAX_COL_SIZE
+    str[0..max_length].gsub(/\s\w+$/, '...') 
+  else
+    str
+  end
+end
+
 class Query < Array
-  def initialize(url)
+  @@row_title =  {
+      :department => "",
+      :department_abrev => "", 
+      :course_num => "",
+      :course_control_numer => "",
+      :section_type => "",
+      :ps => "",
+      :section_num => "",
+      :class_type => "",
+      :title => "",
+      :location => "",
+      :instructor => "",
+      :note => "",
+      :units => "",
+      :final_exam_group => "",
+      :restrictions => "",
+      :limit => "",
+      :enrolled => "",
+      :waitlist => "",
+      :available_seats => "",
+      :enrollment_message => "",
+      :enrollment_updated => "",
+      :status_last_changed => "",
+      :session_start => "",
+      :session_end => "",
+      :course_website => "",
+      :days => "",
+      :time => "",
+  } 
+
+  def initialize(parameters={}, options={:attributes => Section.attributes})
     @num_matches = 0
-    parse_page(url)
+    @attributes = options[:attributes]
+
+    if parameters.has_key? :url
+      parse_page(parameters[:url]) 
+    else
+      parse_page(schedule_url(parameters)) 
+    end
 
     print_progress
   end
@@ -88,8 +129,35 @@ class Query < Array
     parse_page(header.next_url) if header.next_url
   end
 
-  def print_progress
-    $stderr.puts "#{self.size} out of #{@num_matches} courses processed"
+  def print_progress(fp=$stderr)
+    fp.puts "#{self.size} out of #{@num_matches} courses processed"
+  end
+
+  def print_tabular(fp=$stdout)
+    # find max size of each column
+    max_size = {}
+    @attributes.each do |attr|
+      max_size[attr] = (self.map{ |section| 
+        truncate(section.send(attr).to_s).size 
+        } + [truncate(attr.to_s).size])
+      .max
+    end
+    
+    # print header
+    fp.puts @attributes.map { |attr| 
+        "%#{max_size[attr]}s" % truncate(@@row_title[attr]) }
+        .join(" | ")
+
+    # print rows
+    self.each do |section|
+      fp.puts @attributes.map { |attr| 
+          "%#{max_size[attr]}s" % truncate(section.send(attr).to_s) }
+          .join(" | ")
+    end
+  end
+
+  def csv
+
   end
 end
 
@@ -156,17 +224,22 @@ class Section
 
   @@attributes.each { |attr| attr_reader attr }
 
+  def self.attributes
+    @@attributes
+  end
+
   def initialize
     @@attributes.each { |attr| self.instance_variable_set("@#{attr.to_s}", nil)}
   end
 
   def parse_table(str)
+    parse_department_abrev(str)
+
     str.gsub!(/<\/?TD>/, SEPERATOR)
     str.gsub!(/(<\/?[^>]+>|\n|&#[0-9]+;|&nbsp;?)/, '')
     str.gsub!(/\s+/, ' ')
 
     text_tokens = str.split(SEPERATOR).map{|token| token.strip}
-
 
     while text_tokens.size > 0
       label = text_tokens.shift
@@ -198,6 +271,10 @@ class Section
   end
 
   private
+  def parse_department_abrev(str)
+    match = str.match("NAME=\"p_dept_cd\" VALUE=\"([^\"]*)\"")
+    @department_abrev = match[1]
+  end
 
   def parse_course(str)
     match = str.match("(.+) (.+) (.) (.+) (...)")
@@ -290,7 +367,8 @@ if __FILE__ == $PROGRAM_NAME
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
   #Query.new('test/schedule_cases/single_page.html')
-  Query.new('test/schedule_cases/multi_page_1.html')
+  #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units]}).print_tabular
+  Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :units]}).print_tabular
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"

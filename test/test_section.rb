@@ -7,6 +7,9 @@ class SectionTests < Test::Unit::TestCase
 
   def test_parse_table
     @section.parse_table(open('test/schedule_cases/single_table.html').read)
+
+    # Department Abreviation
+    assert_equal("AFRICAM", @section.department_abrev)
     
     # Course
     assert_equal("AFRICAN AMERICAN STUDIES", @section.department)
