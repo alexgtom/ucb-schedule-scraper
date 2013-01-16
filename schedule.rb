@@ -48,7 +48,7 @@ MAX_COL_SIZE = 50
 
 def schedule_url(params={})
   # adds "p_ to beginning of each key in params
-  renamed_params = Hash[params.map {|k, v| ["p_#{k.to_s}", v]}]
+  renamed_params = Array.new(params.map {|k, v| ["p_#{k.to_s}", v]})
 
   "#{SCHEDULE_URL}/OSOC/osoc?#{URI.encode_www_form(renamed_params)}"
 end
@@ -91,9 +91,10 @@ class Query < Array
       :time => "Time",
   } 
 
-  def initialize(parameters={}, options={:attributes => Section.attributes})
+  def initialize(parameters={}, options={:attributes => Section.attributes}, show_progress=false)
     @num_matches = 0
     @attributes = options[:attributes]
+    @show_progress = show_progress
 
     if parameters.has_key? :url
       parse_page(parameters[:url]) 
@@ -110,7 +111,7 @@ class Query < Array
     
     tables = content.scan(/<\s*TABLE[^>]*>.*?<\/TABLE>/m)
     header_table = tables.shift
-    footer_table = tables.pop
+    tables.pop # pop footer table
 
     header = Header.new
     header.parse_table(header_table)
@@ -129,7 +130,9 @@ class Query < Array
   end
 
   def print_progress(fp=$stderr)
-    fp.puts "#{self.size} out of #{@num_matches} courses processed"
+    if @show_progress
+      fp.puts "#{self.size} out of #{@num_matches} courses processed"
+    end
   end
 
   def print_tabular(fp=$stdout)
