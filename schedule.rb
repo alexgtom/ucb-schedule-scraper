@@ -363,7 +363,7 @@ if __FILE__ == $PROGRAM_NAME
   parameters = Hash.new{|hash, key| hash[key] = Array.new}
 
   OptionParser.new do |opts|
-    opts.banner = "Usage: example.rb [options]"
+    opts.banner = "Usage: schedule.rb [options]"
 
     opts.on("--term TERM") do |ext|
         parameters[:term].push ext
@@ -443,10 +443,12 @@ if __FILE__ == $PROGRAM_NAME
               "output only the department and the title") do | list |
       attributes = list.split(",")
     end
+
+    opts.on_tail("-h", "--help", "Show this message") do
+      puts opts
+      exit
+    end
   end.parse!
-  p attributes
-  p parameters 
-  p ARGV
 
 
   Query.new(parameters, {:attributes => attributes}, show_progress=true)
