@@ -91,6 +91,10 @@ class Query < Array
       :time => "Time",
   } 
 
+  def self.row_title
+    @@row_title
+  end
+
   def initialize(parameters={}, options={:attributes => Section.attributes}, show_progress=false)
     @num_matches = 0
     @attributes = options[:attributes]
@@ -99,6 +103,7 @@ class Query < Array
     if parameters.has_key? :url
       parse_page(parameters[:url]) 
     else
+      p schedule_url(parameters)
       parse_page(schedule_url(parameters)) 
     end
 
@@ -353,23 +358,46 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   # command line arguments
-  options = {}
+  attributes = Section.attributes
+  format = "table"
+  parameters = Hash.new{|hash, key| hash[key] = Array.new}
+
   OptionParser.new do |opts|
     opts.banner = "Usage: example.rb [options]"
 
-    opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
-      options[:verbose] = v
+    opts.on("--term TERM") do |ext|
+        parameters[:term].push ext
+    end
+
+    opts.on("--format [FORMAT]") do |ext|
+        format = ext
+    end
+
+    Query.row_title.each do | symbol, title |
+      opts.on("--#{symbol.to_s} [#{title}]") do |ext|
+          parameters[symbol].push ext
+      end
+    end
+
+    opts.on("--attributes [list]", "The columns to show on the output format",
+                                   "Ex. --attributes department,title will",
+                                   "output only the department and the title") do | list |
+      attributes = list.split(",")
     end
   end.parse!
-  p options
+  p attributes
+  p parameters 
   p ARGV
+
+
+  Query.new(parameters, {:attributes => attributes}, show_progress=true)
 
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
   #Query.new('test/schedule_cases/single_page.html')
   #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units]}).print_tabular
-  Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
+  #Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"
