@@ -373,15 +373,74 @@ if __FILE__ == $PROGRAM_NAME
         format = ext
     end
 
-    Query.row_title.each do | symbol, title |
-      opts.on("--#{symbol.to_s} [#{title}]") do |ext|
-          parameters[symbol].push ext
-      end
+    opts.on("--deptname [DEPARTMENT NAME]") do |ext|
+        parameters[:deptname].push ext
     end
 
-    opts.on("--attributes [list]", "The columns to show on the output format",
-                                   "Ex. --attributes department,title will",
-                                   "output only the department and the title") do | list |
+    opts.on("--classif [COURSE CLASSIFICATIONS]") do |ext|
+        parameters[:classif].push ext
+    end
+
+    opts.on("--presuf [COURSE PREFIXES/SUFFIXES]") do |ext|
+        parameters[:presuf].push ext
+    end
+
+    opts.on("--dept [DEPARTMENT ABREVIATION]") do |ext|
+        parameters[:dept].push ext
+    end
+
+    opts.on("--course [COURSE NUMBER]") do |ext|
+        parameters[:course].push ext
+    end
+
+    opts.on("--title [COURSE TITLE KEYWORD]") do |ext|
+        parameters[:title].push ext
+    end
+
+    opts.on("--instr [INSTRUCTOR NAME]") do |ext|
+        parameters[:instr].push ext
+    end
+
+    opts.on("--exam [FINAL EXAM GROUP]") do |ext|
+        parameters[:exam].push ext
+    end
+
+    opts.on("--ccn [COURSE CONTROL NUMBER]") do |ext|
+        parameters[:ccn].push ext
+    end
+
+    opts.on("--day [DAYS]") do |ext|
+        parameters[:day].push ext
+    end
+
+    opts.on("--hour [HOURS]") do |ext|
+        parameters[:hour].push ext
+    end
+
+    opts.on("--bldg [BUILDING NAME]") do |ext|
+        parameters[:bldg].push ext
+    end
+
+    opts.on("--units [UNITS]") do |ext|
+        parameters[:units].push ext
+    end
+
+    opts.on("--restr [RESTRICTIONS]") do |ext|
+        parameters[:restr].push ext
+    end
+
+    opts.on("--info [INFORMATION]") do |ext|
+        parameters[:info].push ext
+    end
+
+    opts.on("--updt [STATUS/LAST CHANGED]") do |ext|
+        parameters[:updt].push ext
+    end
+
+    opts.on("--attributes [list]", 
+              "The columns to show on the output format",
+              "Ex. --attributes department,title will",
+              "output only the department and the title") do | list |
       attributes = list.split(",")
     end
   end.parse!
