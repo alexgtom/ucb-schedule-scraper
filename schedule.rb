@@ -55,7 +55,7 @@ end
 
 def truncate(str, max_length=MAX_COL_SIZE)
   if str.length > MAX_COL_SIZE
-    str[0..max_length].gsub(/\s\w+$/, '...') 
+    str[0..max_length].gsub(/\s\w+$/, '...')
   else
     str
   end
@@ -64,7 +64,7 @@ end
 class Query < Array
   @@row_title =  {
       :department => "Department",
-      :department_abrev => "Dept. Abrev.", 
+      :department_abrev => "Dept. Abrev.",
       :course_num => "Course Num",
       :course_control_numer => "CCN",
       :section_type => "Type",
@@ -89,7 +89,7 @@ class Query < Array
       :course_website => "Course Website",
       :days => "Days",
       :time => "Time",
-  } 
+  }
 
   def self.row_title
     @@row_title
@@ -99,13 +99,16 @@ class Query < Array
     @num_matches = 0
     @attributes = options[:attributes]
     @show_progress = show_progress
+    @parameters = parameters
 
     if parameters.has_key? :url
-      parse_page(parameters[:url]) 
+      parse_page(parameters[:url])
     else
       p schedule_url(parameters)
-      parse_page(schedule_url(parameters)) 
+      parse_page(schedule_url(parameters))
     end
+
+    raise "Number of courses parsed doesnt match total number of courses" unless self.length == @num_matches
 
     print_progress
   end
@@ -113,14 +116,14 @@ class Query < Array
   def parse_page(url)
     file = open(url)
     content = file.read
-    
+
     tables = content.scan(/<\s*TABLE[^>]*>.*?<\/TABLE>/m)
     header_table = tables.shift
     tables.pop # pop footer table
 
     header = Header.new
     header.parse_table(header_table)
-    
+
     @num_matches = header.num_matches
 
     print_progress
@@ -131,7 +134,11 @@ class Query < Array
       self << section
     end
 
-    parse_page(header.next_url) if header.next_url
+    if header.start_row + 100 < header.num_matches
+      @parameters[:start_row] = header.start_row + 100
+      parse_page(schedule_url(@parameters))
+    end
+
   end
 
   def print_progress(fp=$stderr)
@@ -144,20 +151,20 @@ class Query < Array
     # find max size of each column
     max_size = {}
     @attributes.each do |attr|
-      max_size[attr] = (self.map{ |section| 
-        truncate(section.send(attr).to_s).size 
+      max_size[attr] = (self.map{ |section|
+        truncate(section.send(attr).to_s).size
         } + [truncate(@@row_title[attr]).size])
       .max
     end
-    
+
     # print header
-    fp.puts @attributes.map { |attr| 
+    fp.puts @attributes.map { |attr|
         "%#{max_size[attr]}s" % truncate(@@row_title[attr]) }
         .join(" | ")
 
     # print rows
     self.each do |section|
-      fp.puts @attributes.map { |attr| 
+      fp.puts @attributes.map { |attr|
           "%#{max_size[attr]}s" % truncate(section.send(attr).to_s) }
           .join(" | ")
     end
@@ -169,63 +176,55 @@ class Query < Array
 end
 
 class Header
-  attr_reader :next_url, :num_matches
+  attr_reader :num_matches, :start_row, :end_row
   def initialize
-    @next_url = nil
     @num_matches = nil
+    @start_row = nil
+    @end_row = nil
   end
 
   def parse_table(str)
-    parse_next_url(str)
     parse_num_matches(str)
   end
-  
-  private 
 
-  def parse_next_url(str)
-    if match = str.match("<A HREF=\"([^\"]*)\">.*see next results")
-      @next_url = match[1] 
-      if next_url[0] == '/'
-        # if the url found is in the format "/OSOC/osoc?attr=value", fix it
-        @next_url = "#{SCHEDULE_URL}#{next_url}"
-      end
-    end
-  end
+  private
 
   def parse_num_matches(str)
-    match = str.match("Displaying [0-9\-]+ of ([0-9]+) matches to your request for ")
-    @num_matches = match[1]
+    match = str.match("Displaying ([0-9]+)-([0-9]+) of ([0-9]+) matches to your request for ")
+    @num_matches = match[3].to_i
+    @start_row = match[1].to_i
+    @end_row = match[2].to_i
   end
 end
 
-class Section 
+class Section
   @@attributes = [
-      :department, 
-      :department_abrev, 
-      :course_num, 
-      :course_control_numer, 
-      :section_type, 
-      :ps, 
-      :section_num, 
-      :title, 
-      :location, 
-      :instructor, 
-      :note, 
-      :units, 
-      :final_exam_group, 
-      :restrictions, 
-      :limit, 
-      :enrolled, 
-      :waitlist, 
-      :available_seats, 
-      :enrollment_message, 
-      :enrollment_updated, 
-      :status_last_changed, 
-      :session_start, 
-      :session_end, 
-      :course_website, 
-      :days, 
-      :time, 
+      :department,
+      :department_abrev,
+      :course_num,
+      :course_control_numer,
+      :section_type,
+      :ps,
+      :section_num,
+      :title,
+      :location,
+      :instructor,
+      :note,
+      :units,
+      :final_exam_group,
+      :restrictions,
+      :limit,
+      :enrolled,
+      :waitlist,
+      :available_seats,
+      :enrollment_message,
+      :enrollment_updated,
+      :status_last_changed,
+      :session_start,
+      :session_end,
+      :course_website,
+      :days,
+      :time,
   ]
 
   @@attributes.each { |attr| attr_reader attr }
@@ -250,28 +249,28 @@ class Section
     while text_tokens.size > 0
       label = text_tokens.shift
       if label =~ /^Course:/
-        parse_course(text_tokens.shift)                 
+        parse_course(text_tokens.shift)
       elsif label =~ /^Course Title:/
-        parse_course_title(text_tokens.shift)           
+        parse_course_title(text_tokens.shift)
       elsif label =~ /^Location:/
-        parse_location(text_tokens.shift)               
+        parse_location(text_tokens.shift)
       elsif label =~ /^Instructor:/
-        parse_instructor(text_tokens.shift)             
+        parse_instructor(text_tokens.shift)
       elsif label =~ /^Status\/Last Changed:/
-        parse_status_last_changed(text_tokens.shift)    
+        parse_status_last_changed(text_tokens.shift)
       elsif label =~ /^Course Control Number:/
-        parse_course_control_number(text_tokens.shift)  
+        parse_course_control_number(text_tokens.shift)
       elsif label =~ /^Units\/Credit:/
-        parse_units_credit(text_tokens.shift)           
+        parse_units_credit(text_tokens.shift)
       elsif label =~ /^Final Exam Group:/
-        parse_final_exam_group(text_tokens.shift)       
+        parse_final_exam_group(text_tokens.shift)
       elsif label =~ /^Restrictions:/
-        parse_restrictions(text_tokens.shift)           
+        parse_restrictions(text_tokens.shift)
       elsif label =~ /^Note:/
-        parse_note(text_tokens.shift)                   
+        parse_note(text_tokens.shift)
       elsif label =~ /^Enrollment on /
         parse_enrollment_on_date(label)
-        parse_enrollment(text_tokens.shift)          
+        parse_enrollment(text_tokens.shift)
       end
     end
   end
@@ -339,7 +338,7 @@ class Section
 
   def parse_enrollment(str)
     if str == "SEE DEPT"
-      @limit = @enrolled = @waitlist = @available_seats = "SEE DEPT"   
+      @limit = @enrolled = @waitlist = @available_seats = "SEE DEPT"
     elsif match = str.match("Limit:([0-9]+) Enrolled:([0-9]+) Waitlist:([0-9]+) Avail Seats:([0-9]+)")
       @limit = match[1]
       @enrolled = match[2]
@@ -349,7 +348,7 @@ class Section
   end
 
   def to_s
-    "[ #{@@attributes.map{ 
+    "[ #{@@attributes.map{
       |attr| "#{attr.to_s}: \"#{self.instance_variable_get("@#{attr.to_s}")}\""
     }.join(', ')} ]"
   end
@@ -437,7 +436,7 @@ if __FILE__ == $PROGRAM_NAME
         parameters[:updt].push ext
     end
 
-    opts.on("--attributes [list]", 
+    opts.on("--attributes [list]",
               "The columns to show on the output format",
               "Ex. --attributes department,title will",
               "output only the department and the title") do | list |
@@ -451,14 +450,16 @@ if __FILE__ == $PROGRAM_NAME
   end.parse!
 
 
-  Query.new(parameters, {:attributes => attributes}, show_progress=true)
+  #Query.new(parameters, {:attributes => attributes}, show_progress=true)
 
   # main program
   #p schedule_page(:term => "FL", :dept => "CHEM")
   #Query.new('test/schedule_cases/section.html')
   #Query.new('test/schedule_cases/single_page.html')
-  #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units]}).print_tabular
-  #Query.new({:term => "FL", :dept => "POL SCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
+  #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units, :title]}).print_tabular
+  #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
+  #Query.new({:term => "FL", :dept => "COMPSCI"}).print_tabular
+  Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).print_tabular
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"
