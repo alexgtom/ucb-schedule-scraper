@@ -3,6 +3,7 @@
 require 'uri'
 require 'optparse'
 require 'open-uri'
+require 'json'
 # Sample URLs:
 #   Term
 #       p_term = {FL, SP, SU}
@@ -173,6 +174,10 @@ class Query < Array
   def csv
 
   end
+
+  def to_json
+    self.map{ |section| section.to_json }.to_json
+  end
 end
 
 class Header
@@ -273,6 +278,14 @@ class Section
         parse_enrollment(text_tokens.shift)
       end
     end
+  end
+
+  def to_json
+    hash = {}
+    @@attributes.map{
+      |attr| hash[attr] = self.instance_variable_get("@#{attr.to_s}")
+    }
+    hash.to_json
   end
 
   private
@@ -459,7 +472,8 @@ if __FILE__ == $PROGRAM_NAME
   #Query.new({:url => 'test/schedule_cases/multi_page_1.html'}, {:attributes => [:department, :units, :title]}).print_tabular
   #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
   #Query.new({:term => "FL", :dept => "COMPSCI"}).print_tabular
-  Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).print_tabular
+  #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).print_tabular
+  Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"
