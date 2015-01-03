@@ -132,6 +132,8 @@ class Query < Array
     tables.each do |table|
       section = Section.new
       section.parse_table(table)
+      section.term = header.term
+      section.term_year = header.term_year
       self << section
     end
 
@@ -181,11 +183,13 @@ class Query < Array
 end
 
 class Header
-  attr_reader :num_matches, :start_row, :end_row
+  attr_reader :num_matches, :start_row, :end_row, :term, :term_year
   def initialize
     @num_matches = nil
     @start_row = nil
     @end_row = nil
+    @term = nil
+    @term_year = nil
   end
 
   def parse_table(str)
@@ -195,10 +199,12 @@ class Header
   private
 
   def parse_num_matches(str)
-    match = str.match("Displaying ([0-9]+)-([0-9]+) of ([0-9]+) matches to your request for ")
+    match = str.match("Displaying ([0-9]+)-([0-9]+) of ([0-9]+) matches to your request for <.*>([a-zA-Z]+)\s+([0-9]+)")
     @num_matches = match[3].to_i
     @start_row = match[1].to_i
     @end_row = match[2].to_i
+    @term = match[4]
+    @term_year = match[5].to_i
   end
 end
 
@@ -230,9 +236,11 @@ class Section
       :course_website,
       :days,
       :time,
+      :term,
+      :term_year,
   ]
 
-  @@attributes.each { |attr| attr_reader attr }
+  @@attributes.each { |attr| attr_accessor attr }
 
   def self.attributes
     @@attributes
@@ -342,6 +350,9 @@ class Section
   end
 
   def parse_note(str)
+    if match = str.match(/(Also:.*)/)
+      puts match.captures[0]
+    end
     @note = str
   end
 
@@ -473,7 +484,10 @@ if __FILE__ == $PROGRAM_NAME
   #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :section_type, :units, :title, :instructor, :location]}).print_tabular
   #Query.new({:term => "FL", :dept => "COMPSCI"}).print_tabular
   #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).print_tabular
-  Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json
+  #puts JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json)
+  #JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json)
+  JSON.parse(Query.new({:term => "FL", :classif => "U"}, {:attributes => [:department, :units, :title]}).to_json)
+  #puts JSON.pretty_generate(JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json))
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
   #p "Total Courses: #{Query.new(url).size}"
