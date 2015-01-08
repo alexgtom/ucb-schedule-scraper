@@ -1,5 +1,6 @@
 require 'testing_env'
 require 'json'
+require 'date'
 
 class SectionTests < Test::Unit::TestCase
   def setup
@@ -23,12 +24,15 @@ class SectionTests < Test::Unit::TestCase
     assert_equal("Critical Pedagogy: Instructor Training", @section.title)
 
     # Location
-    assert_equal("102 BARROWS", @section.location)
-    assert_equal("W", @section.days)
-    assert_equal("3-6P", @section.time)
+    assert_equal([{
+      "status" => nil,
+      "building" => "102 BARROWS",
+      "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 3).iso8601,
+      "end_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 6).iso8601,
+    }], @section.location)
 
     # Instructor
-    assert_equal("TAYLOR, U Y", @section.instructor)
+    assert_equal(["TAYLOR, U Y"], @section.instructor)
 
     # Status/Last Changed
     assert_equal("", @section.status_last_changed)
@@ -66,19 +70,16 @@ class SectionTests < Test::Unit::TestCase
 
   def test_parse_location
     @section.send(:parse_location, "CANCELLED")
-    assert_equal("CANCELLED", @section.days)
-    assert_equal("CANCELLED", @section.location)
-    assert_equal("CANCELLED", @section.time)
+    assert_equal("CANCELLED", @section.location_status)
+    assert_equal([], @section.location)
 
     @section.send(:parse_location, "UNSCHED NOFACILITY")
-    assert_equal("UNSCHED NOFACILITY", @section.days)
-    assert_equal("UNSCHED NOFACILITY", @section.location)
-    assert_equal("UNSCHED NOFACILITY", @section.time)
+    assert_equal("UNSCHED NOFACILITY", @section.location_status)
+    assert_equal([], @section.location)
 
     @section.send(:parse_location, "TBA")
-    assert_equal("TBA", @section.days)
-    assert_equal("TBA", @section.location)
-    assert_equal("TBA", @section.time)
+    assert_equal("TBA", @section.location_status)
+    assert_equal([], @section.location)
   end
 
   def test_parse_enrollment
@@ -97,5 +98,44 @@ class SectionTests < Test::Unit::TestCase
     assert_equal("P", @section.ps)
     assert_equal("1-29", @section.section_num)
     assert_equal("IND", @section.section_type)
+  end
+
+  def test_parse_note
+    @section = Section.new
+    @section.send(:parse_note, "Also: SCAIEF, A L; SEINO, J; FONG, D T; Th 9-11A, 300 MINOR ADDITN; Th 10-11A, 300 MINOR ADDITN; Th 8-10A, 300 MINOR ADDITN")
+    assert_equal(["SCAIEF, A L", "SEINO, J", "FONG, D T"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_location, "Th 10-11A, ")
+    @section.send(:parse_note, "Also: HARVEY, P L; Tu 8-9A, 489 MINOR")
+    assert_equal(["HARVEY, P L"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: MASON, L B")
+    assert_equal(["MASON, L B"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: KASKUTAS, L A; CHERPITEL, C J")
+    assert_equal(["KASKUTAS, L A", "CHERPITEL, C J"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: W 7-8P, 18 BARROWS")
+    @section = Section.new
+    @section.send(:parse_note, "Also: HERNANDEZ-RODRIGUE")
+    assert_equal(["HERNANDEZ-RODRIGUE"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: STUDENTTEACHER, A")
+    assert_equal(["STUDENTTEACHER, A"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: BIOLSI, T J; UNSCHED NOFACILITY")
+    assert_equal(["BIOLSI, T J"], @section.instructor)
+
+    @section = Section.new
+    @section.send(:parse_note, "Also: ESQUER, D; Basketball MARTIN, C L; Crew TETI, M F; Football DYKES, D; Golf DESIMONE, S R; Gymnastics MCCLURE, B D; Soccer GRIMES, K; Swimming DURANTE, D L; Tennis WRIGHT, P T; Track and Field SANDOVAL, A M; Water Polo EVERIST, K F; Weight Training. For Intercollegiate Athletes only. CCNs can be obtained through your Athletic Study Center academic advisor. BLASQUEZ, M S")
+    assert_equal([
+      "ESQUER, D", "MARTIN, C L", "TETI, M F", "DYKES, D", "DESIMONE, S R", "MCCLURE, B D", "GRIMES, K", "DURANTE, D L", "WRIGHT, P T", "SANDOVAL, A M", "EVERIST, K F", "BLASQUEZ, M S"
+    ], @section.instructor)
   end
 end

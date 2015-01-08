@@ -4,6 +4,8 @@ require 'uri'
 require 'optparse'
 require 'open-uri'
 require 'json'
+require 'date'
+
 # Sample URLs:
 #   Term
 #       p_term = {FL, SP, SU}
@@ -62,6 +64,19 @@ def truncate(str, max_length=MAX_COL_SIZE)
   end
 end
 
+DATETIME_YEAR = 2015
+DATETIME_MONTH = 1
+DATETIME_MON = 5
+DATETIME_TUE = 6
+DATETIME_WED = 7
+DATETIME_THU = 8
+DATETIME_FRI = 9
+DATETIME_SAT = 10
+DATETIME_SUN = 11
+
+SCHEDULE_DAY_TIME_LOCATION_RE = "((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)"
+SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE = "(CANCELLED|UNSCHED NOFACILITY|TBA)"
+
 class Query < Array
   @@row_title =  {
       :department => "Department",
@@ -88,8 +103,6 @@ class Query < Array
       :session_start => "Session Start",
       :session_end => "Session End",
       :course_website => "Course Website",
-      :days => "Days",
-      :time => "Time",
   }
 
   def self.row_title
@@ -219,6 +232,7 @@ class Section
       :section_num,
       :title,
       :location,
+      :location_status,
       :instructor,
       :note,
       :units,
@@ -234,8 +248,6 @@ class Section
       :session_start,
       :session_end,
       :course_website,
-      :days,
-      :time,
       :term,
       :term_year,
   ]
@@ -316,17 +328,91 @@ class Section
   end
 
   def parse_location(str)
-    if match = str.match("(CANCELLED|UNSCHED NOFACILITY|TBA)")
-      @days = @location = @time = match[1]
-    elsif match = str.match("((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)")
-      @location = match[4]
-      @days = match[2]
-      @time = match[3]
+    @location = []
+
+    if match = str.match(SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE)
+      @location_status = match[1]
+    elsif match = str.match(SCHEDULE_DAY_TIME_LOCATION_RE)
+      days = match[2]
+      time = match[3]
+      building = match[4]
+
+      if days == "MTWTF"
+        days = "MTuWThF"
+      end
+
+      # parse times
+      start_time, end_time = time.split('-')
+      start_time = start_time.to_i
+
+      if end_time.include? 'PM'
+        end_time.tr!("PM", "")
+        is_pm = true
+      else
+        end_time.tr!("AM", "")
+        is_pm = false
+      end
+      end_time = end_time.to_i
+
+      # convert times from 8-12 format to 800-1200
+      if start_time <= 12
+        start_time *= 100
+      end
+
+      if end_time <= 12
+        end_time *= 100
+        if is_pm
+          # convert to 24 hour format
+          end_time += 1200
+        end
+      end
+
+      t = start_time.to_s.match(/(\d+)(\d\d)/)
+      start_hour = t[1].to_i
+      start_minute = t[2].to_i
+
+      t = end_time.to_s.match(/(\d+)(\d\d)/)
+      end_hour = t[1].to_i
+      end_minute = t[2].to_i
+
+      # times are now in the form 800 or 2400
+      day_map = {
+        'M' => DATETIME_MON,
+        'Tu' => DATETIME_TUE,
+        'W' => DATETIME_WED,
+        'Th' => DATETIME_THU,
+        'F' => DATETIME_FRI,
+        'Sa' => DATETIME_SAT,
+        'SA' => DATETIME_SAT,
+        'Su' => DATETIME_SUN,
+        'SU' => DATETIME_SUN,
+      }
+
+      day_map.each do |day, day_date|
+        DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_MON, start_hour).iso8601
+        if days.include?(day)
+          @location.push({
+            "building" => building,
+            "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, day_date, start_hour, start_minute).iso8601,
+            "end_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, day_date, end_hour, end_minute).iso8601,
+            "status" => nil,
+          })
+        end
+      end
     end
   end
 
   def parse_instructor(str)
-    @instructor = str
+    if not @instructor
+      @instructor = []
+    end
+
+    str.strip!
+
+    match = str.match(/([A-Z\s\-,]+)$/)
+    if match
+      @instructor.push(match[1].strip)
+    end
   end
 
   def parse_status_last_changed(str)
@@ -350,8 +436,16 @@ class Section
   end
 
   def parse_note(str)
-    if match = str.match(/(Also:.*)/)
-      puts match.captures[0]
+    if match = str.match(/Also:(.*)/)
+      match[1].split(";").collect{|x| x.strip}.each do |e|
+        if e.match(SCHEDULE_DAY_TIME_LOCATION_RE) or e.match(SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE)
+          # another location
+          parse_location(e)
+        else
+          # another insturctor
+          parse_instructor(e)
+        end
+      end
     end
     @note = str
   end
@@ -486,7 +580,7 @@ if __FILE__ == $PROGRAM_NAME
   #Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).print_tabular
   #puts JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json)
   #JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json)
-  JSON.parse(Query.new({:term => "FL", :classif => "U"}, {:attributes => [:department, :units, :title]}).to_json)
+  JSON.parse(Query.new({:term => "FL", :classif => "L"}, {:attributes => [:department, :units, :title]}).to_json)
   #puts JSON.pretty_generate(JSON.parse(Query.new({:term => "FL", :dept => "COMPSCI"}, {:attributes => [:department, :units, :title]}).to_json))
   #url = schedule_url(:term => "FL", :classif => "O")
   #p url
