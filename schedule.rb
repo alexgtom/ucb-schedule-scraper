@@ -76,6 +76,7 @@ DATETIME_SUN = 11
 
 SCHEDULE_DAY_TIME_LOCATION_RE = "((M|Tu|W|Th|F|Sa|Su|SA|SU|T)+) (.+), (.*)"
 SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE = "(CANCELLED|UNSCHED NOFACILITY|TBA)"
+SCHEDULE_MAX_CLASS_LENGTH_MINUTES = 5 * 60  # 8 hours
 
 class Query < Array
   @@row_title =  {
@@ -328,7 +329,9 @@ class Section
   end
 
   def parse_location(str)
-    @location = []
+    if not @location
+      @location = []
+    end
 
     if match = str.match(SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE)
       @location_status = match[1]
@@ -343,37 +346,48 @@ class Section
 
       # parse times
       start_time, end_time = time.split('-')
-      start_time = start_time.to_i
+      #start_time = start_time.to_i
 
-      if end_time.include? 'PM'
-        end_time.tr!("PM", "")
+      if end_time.include? 'P'
+        end_time.tr!("P", "")
         is_pm = true
       else
-        end_time.tr!("AM", "")
+        end_time.tr!("A", "")
         is_pm = false
       end
-      end_time = end_time.to_i
+      #end_time = end_time.to_i
 
-      # convert times from 8-12 format to 800-1200
-      if start_time <= 12
-        start_time *= 100
-      end
-
-      if end_time <= 12
-        end_time *= 100
-        if is_pm
-          # convert to 24 hour format
-          end_time += 1200
-        end
-      end
-
-      t = start_time.to_s.match(/(\d+)(\d\d)/)
+      t = start_time.match(/(\d{1,2})(\d\d)?$/)
       start_hour = t[1].to_i
       start_minute = t[2].to_i
 
-      t = end_time.to_s.match(/(\d+)(\d\d)/)
+      t = end_time.match(/(\d{1,2})(\d\d)?$/)
       end_hour = t[1].to_i
       end_minute = t[2].to_i
+
+      if end_hour >= start_hour
+        if is_pm
+          if start_hour < 12 and end_hour < 12
+            start_hour += 12
+            end_hour += 12
+          end
+        else
+          # do nothing
+        end
+      else
+        if is_pm
+          if end_hour < 12
+            end_hour += 12
+          end
+        end
+      end
+
+      duration = (end_hour * 60 + end_minute) - (start_hour * 60 + start_minute)
+
+      ##over_max_class_length = end_time - start_time > SCHEDULE_MAX_CLASS_LENGTH_HOURS
+      #if (end_hour * 60 + end_minute) - (start_hour * 60 + start_minute) > SCHEDULE_MAX_CLASS_LENGTH_MINUTES
+      #  start_hour += 12
+      #end
 
       # times are now in the form 800 or 2400
       day_map = {
@@ -394,8 +408,7 @@ class Section
           @location.push({
             "building" => building,
             "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, day_date, start_hour, start_minute).iso8601,
-            "end_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, day_date, end_hour, end_minute).iso8601,
-            "status" => nil,
+            "duration" => duration,
           })
         end
       end

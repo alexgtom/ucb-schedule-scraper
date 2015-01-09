@@ -25,11 +25,12 @@ class SectionTests < Test::Unit::TestCase
 
     # Location
     assert_equal([{
-      "status" => nil,
       "building" => "102 BARROWS",
-      "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 3).iso8601,
-      "end_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 6).iso8601,
+      "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 15).iso8601,
+      "duration" => 180,
     }], @section.location)
+
+    assert_equal(nil, @location_status)
 
     # Instructor
     assert_equal(["TAYLOR, U Y"], @section.instructor)
@@ -104,15 +105,44 @@ class SectionTests < Test::Unit::TestCase
     @section = Section.new
     @section.send(:parse_note, "Also: SCAIEF, A L; SEINO, J; FONG, D T; Th 9-11A, 300 MINOR ADDITN; Th 10-11A, 300 MINOR ADDITN; Th 8-10A, 300 MINOR ADDITN")
     assert_equal(["SCAIEF, A L", "SEINO, J", "FONG, D T"], @section.instructor)
+    assert_equal([
+      {
+        "building" => "300 MINOR ADDITN",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, 9).iso8601,
+        "duration" => 120,
+      },
+      {
+        "building" => "300 MINOR ADDITN",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, 10).iso8601,
+        "duration" => 60,
+      },
+      {
+        "building" => "300 MINOR ADDITN",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, 8).iso8601,
+        "duration" => 120,
+      },
+    ], @section.location)
 
     @section = Section.new
-    @section.send(:parse_location, "Th 10-11A, ")
+    @section.send(:parse_location, "Th 10-11A, 500 MINOR")
     @section.send(:parse_note, "Also: HARVEY, P L; Tu 8-9A, 489 MINOR")
-    assert_equal(["HARVEY, P L"], @section.instructor)
+    assert_equal([
+      {
+        "building" => "500 MINOR",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, 10).iso8601,
+        "duration" => 60,
+      },
+      {
+        "building" => "489 MINOR",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_TUE, 8).iso8601,
+        "duration" => 60,
+      },
+    ], @section.location)
 
     @section = Section.new
+    @section.send(:parse_instructor, "DENERO, J")
     @section.send(:parse_note, "Also: MASON, L B")
-    assert_equal(["MASON, L B"], @section.instructor)
+    assert_equal(["DENERO, J", "MASON, L B"], @section.instructor)
 
     @section = Section.new
     @section.send(:parse_note, "Also: KASKUTAS, L A; CHERPITEL, C J")
@@ -120,6 +150,14 @@ class SectionTests < Test::Unit::TestCase
 
     @section = Section.new
     @section.send(:parse_note, "Also: W 7-8P, 18 BARROWS")
+    assert_equal([
+      {
+        "building" => "18 BARROWS",
+        "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 19).iso8601,
+        "duration" => 60,
+      },
+    ], @section.location)
+
     @section = Section.new
     @section.send(:parse_note, "Also: HERNANDEZ-RODRIGUE")
     assert_equal(["HERNANDEZ-RODRIGUE"], @section.instructor)
@@ -131,11 +169,77 @@ class SectionTests < Test::Unit::TestCase
     @section = Section.new
     @section.send(:parse_note, "Also: BIOLSI, T J; UNSCHED NOFACILITY")
     assert_equal(["BIOLSI, T J"], @section.instructor)
+    assert_equal("UNSCHED NOFACILITY", @section.location_status)
 
     @section = Section.new
     @section.send(:parse_note, "Also: ESQUER, D; Basketball MARTIN, C L; Crew TETI, M F; Football DYKES, D; Golf DESIMONE, S R; Gymnastics MCCLURE, B D; Soccer GRIMES, K; Swimming DURANTE, D L; Tennis WRIGHT, P T; Track and Field SANDOVAL, A M; Water Polo EVERIST, K F; Weight Training. For Intercollegiate Athletes only. CCNs can be obtained through your Athletic Study Center academic advisor. BLASQUEZ, M S")
     assert_equal([
       "ESQUER, D", "MARTIN, C L", "TETI, M F", "DYKES, D", "DESIMONE, S R", "MCCLURE, B D", "GRIMES, K", "DURANTE, D L", "WRIGHT, P T", "SANDOVAL, A M", "EVERIST, K F", "BLASQUEZ, M S"
     ], @section.instructor)
+  end
+
+
+  def test_time
+    # we're assuming theres never going to be a class that starts at 5am because
+    # thats fucking insane.
+    for start_hour in 5..23
+      for end_hour in 0..23
+        for start_minute in [0, 30]
+          for end_minute in [0, 30]
+            # skip invalid times
+            if start_hour == 24 and start_minute == 30
+              next
+            end
+
+            if end_hour == 24 and end_minute == 30
+              next
+            end
+
+            start_time = DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, start_hour, start_minute)
+            end_time = DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, end_hour, end_minute)
+
+            # skip more invalid times
+            if start_time >= end_time
+              next
+            end
+
+            if (end_time.hour * 60 + end_time.minute) - (start_time.hour * 60 + start_time.minute) > SCHEDULE_MAX_CLASS_LENGTH_MINUTES
+              next
+            end
+
+            if start_minute == 0
+              start_time_format = "%l"
+            else
+              start_time_format = "%l%M"
+            end
+
+            if end_minute == 0
+              end_time_format = "%l"
+            else
+              end_time_format = "%l%M"
+            end
+
+            # Add am and pm to end time
+            if end_hour >= 12
+              end_time_format += "P"
+            else
+              end_time_format += "A"
+            end
+
+            duration = (end_hour * 60 + end_minute) - (start_hour * 60 + start_minute)
+
+            @section = Section.new
+            @section.send(:parse_location, "Th #{start_time.strftime(start_time_format).strip}-#{end_time.strftime(end_time_format).strip}, 500 MINOR")
+            assert_equal([{
+              "building" => "500 MINOR",
+              "start_time" => start_time.iso8601,
+              "duration" => duration,
+            }], @section.location)
+          end
+        end
+      end
+    end
+    @section.send(:parse_location, "Th 10-11A, 500 MINOR")
+    @section.send(:parse_note, "Also: HARVEY, P L; Tu 8-9A, 489 MINOR")
   end
 end
