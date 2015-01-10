@@ -234,7 +234,7 @@ class Section
       :title,
       :location,
       :location_status,
-      :instructor,
+      :instructors,
       :note,
       :units,
       :final_exam_group,
@@ -416,15 +416,15 @@ class Section
   end
 
   def parse_instructor(str)
-    if not @instructor
-      @instructor = []
+    if not @instructors
+      @instructors = []
     end
 
     str.strip!
 
     match = str.match(/([A-Z\s\-,]+)$/)
     if match
-      @instructor.push(match[1].strip)
+      @instructors.push(match[1].strip)
     end
   end
 

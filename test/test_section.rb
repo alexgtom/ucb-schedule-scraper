@@ -33,7 +33,7 @@ class SectionTests < Test::Unit::TestCase
     assert_equal(nil, @location_status)
 
     # Instructor
-    assert_equal(["TAYLOR, U Y"], @section.instructor)
+    assert_equal(["TAYLOR, U Y"], @section.instructors)
 
     # Status/Last Changed
     assert_equal("", @section.status_last_changed)
@@ -104,7 +104,7 @@ class SectionTests < Test::Unit::TestCase
   def test_parse_note
     @section = Section.new
     @section.send(:parse_note, "Also: SCAIEF, A L; SEINO, J; FONG, D T; Th 9-11A, 300 MINOR ADDITN; Th 10-11A, 300 MINOR ADDITN; Th 8-10A, 300 MINOR ADDITN")
-    assert_equal(["SCAIEF, A L", "SEINO, J", "FONG, D T"], @section.instructor)
+    assert_equal(["SCAIEF, A L", "SEINO, J", "FONG, D T"], @section.instructors)
     assert_equal([
       {
         "building" => "300 MINOR ADDITN",
@@ -142,11 +142,11 @@ class SectionTests < Test::Unit::TestCase
     @section = Section.new
     @section.send(:parse_instructor, "DENERO, J")
     @section.send(:parse_note, "Also: MASON, L B")
-    assert_equal(["DENERO, J", "MASON, L B"], @section.instructor)
+    assert_equal(["DENERO, J", "MASON, L B"], @section.instructors)
 
     @section = Section.new
     @section.send(:parse_note, "Also: KASKUTAS, L A; CHERPITEL, C J")
-    assert_equal(["KASKUTAS, L A", "CHERPITEL, C J"], @section.instructor)
+    assert_equal(["KASKUTAS, L A", "CHERPITEL, C J"], @section.instructors)
 
     @section = Section.new
     @section.send(:parse_note, "Also: W 7-8P, 18 BARROWS")
@@ -160,22 +160,22 @@ class SectionTests < Test::Unit::TestCase
 
     @section = Section.new
     @section.send(:parse_note, "Also: HERNANDEZ-RODRIGUE")
-    assert_equal(["HERNANDEZ-RODRIGUE"], @section.instructor)
+    assert_equal(["HERNANDEZ-RODRIGUE"], @section.instructors)
 
     @section = Section.new
     @section.send(:parse_note, "Also: STUDENTTEACHER, A")
-    assert_equal(["STUDENTTEACHER, A"], @section.instructor)
+    assert_equal(["STUDENTTEACHER, A"], @section.instructors)
 
     @section = Section.new
     @section.send(:parse_note, "Also: BIOLSI, T J; UNSCHED NOFACILITY")
-    assert_equal(["BIOLSI, T J"], @section.instructor)
+    assert_equal(["BIOLSI, T J"], @section.instructors)
     assert_equal("UNSCHED NOFACILITY", @section.location_status)
 
     @section = Section.new
     @section.send(:parse_note, "Also: ESQUER, D; Basketball MARTIN, C L; Crew TETI, M F; Football DYKES, D; Golf DESIMONE, S R; Gymnastics MCCLURE, B D; Soccer GRIMES, K; Swimming DURANTE, D L; Tennis WRIGHT, P T; Track and Field SANDOVAL, A M; Water Polo EVERIST, K F; Weight Training. For Intercollegiate Athletes only. CCNs can be obtained through your Athletic Study Center academic advisor. BLASQUEZ, M S")
     assert_equal([
       "ESQUER, D", "MARTIN, C L", "TETI, M F", "DYKES, D", "DESIMONE, S R", "MCCLURE, B D", "GRIMES, K", "DURANTE, D L", "WRIGHT, P T", "SANDOVAL, A M", "EVERIST, K F", "BLASQUEZ, M S"
-    ], @section.instructor)
+    ], @section.instructors)
   end
 
 
