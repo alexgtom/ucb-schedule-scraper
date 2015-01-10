@@ -192,7 +192,7 @@ class Query < Array
   end
 
   def to_json
-    self.map{ |section| section.to_json }.to_json
+    self.map{ |section| JSON.load(section.to_json) }.to_json
   end
 end
 
