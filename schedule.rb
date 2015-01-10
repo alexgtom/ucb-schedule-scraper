@@ -232,8 +232,8 @@ class Section
       :ps,
       :section_num,
       :title,
-      :location,
-      :location_status,
+      :locations,
+      :locations_status,
       :instructors,
       :note,
       :units,
@@ -329,12 +329,12 @@ class Section
   end
 
   def parse_location(str)
-    if not @location
-      @location = []
+    if not @locations
+      @locations = []
     end
 
     if match = str.match(SCHEDULE_DAY_TIME_LOCATION_UNKNOWN_RE)
-      @location_status = match[1]
+      @locations_status = match[1]
     elsif match = str.match(SCHEDULE_DAY_TIME_LOCATION_RE)
       days = match[2]
       time = match[3]
@@ -405,7 +405,7 @@ class Section
       day_map.each do |day, day_date|
         DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_MON, start_hour).iso8601
         if days.include?(day)
-          @location.push({
+          @locations.push({
             "building" => building,
             "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, day_date, start_hour, start_minute).iso8601,
             "duration" => duration,

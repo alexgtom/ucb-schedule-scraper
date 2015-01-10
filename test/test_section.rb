@@ -28,7 +28,7 @@ class SectionTests < Test::Unit::TestCase
       "building" => "102 BARROWS",
       "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 15).iso8601,
       "duration" => 180,
-    }], @section.location)
+    }], @section.locations)
 
     assert_equal(nil, @location_status)
 
@@ -71,16 +71,16 @@ class SectionTests < Test::Unit::TestCase
 
   def test_parse_location
     @section.send(:parse_location, "CANCELLED")
-    assert_equal("CANCELLED", @section.location_status)
-    assert_equal([], @section.location)
+    assert_equal("CANCELLED", @section.locations_status)
+    assert_equal([], @section.locations)
 
     @section.send(:parse_location, "UNSCHED NOFACILITY")
-    assert_equal("UNSCHED NOFACILITY", @section.location_status)
-    assert_equal([], @section.location)
+    assert_equal("UNSCHED NOFACILITY", @section.locations_status)
+    assert_equal([], @section.locations)
 
     @section.send(:parse_location, "TBA")
-    assert_equal("TBA", @section.location_status)
-    assert_equal([], @section.location)
+    assert_equal("TBA", @section.locations_status)
+    assert_equal([], @section.locations)
   end
 
   def test_parse_enrollment
@@ -121,7 +121,7 @@ class SectionTests < Test::Unit::TestCase
         "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_THU, 8).iso8601,
         "duration" => 120,
       },
-    ], @section.location)
+    ], @section.locations)
 
     @section = Section.new
     @section.send(:parse_location, "Th 10-11A, 500 MINOR")
@@ -137,7 +137,7 @@ class SectionTests < Test::Unit::TestCase
         "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_TUE, 8).iso8601,
         "duration" => 60,
       },
-    ], @section.location)
+    ], @section.locations)
 
     @section = Section.new
     @section.send(:parse_instructor, "DENERO, J")
@@ -156,7 +156,7 @@ class SectionTests < Test::Unit::TestCase
         "start_time" => DateTime.new(DATETIME_YEAR, DATETIME_MONTH, DATETIME_WED, 19).iso8601,
         "duration" => 60,
       },
-    ], @section.location)
+    ], @section.locations)
 
     @section = Section.new
     @section.send(:parse_note, "Also: HERNANDEZ-RODRIGUE")
@@ -169,7 +169,7 @@ class SectionTests < Test::Unit::TestCase
     @section = Section.new
     @section.send(:parse_note, "Also: BIOLSI, T J; UNSCHED NOFACILITY")
     assert_equal(["BIOLSI, T J"], @section.instructors)
-    assert_equal("UNSCHED NOFACILITY", @section.location_status)
+    assert_equal("UNSCHED NOFACILITY", @section.locations_status)
 
     @section = Section.new
     @section.send(:parse_note, "Also: ESQUER, D; Basketball MARTIN, C L; Crew TETI, M F; Football DYKES, D; Golf DESIMONE, S R; Gymnastics MCCLURE, B D; Soccer GRIMES, K; Swimming DURANTE, D L; Tennis WRIGHT, P T; Track and Field SANDOVAL, A M; Water Polo EVERIST, K F; Weight Training. For Intercollegiate Athletes only. CCNs can be obtained through your Athletic Study Center academic advisor. BLASQUEZ, M S")
@@ -234,7 +234,7 @@ class SectionTests < Test::Unit::TestCase
               "building" => "500 MINOR",
               "start_time" => start_time.iso8601,
               "duration" => duration,
-            }], @section.location)
+            }], @section.locations)
           end
         end
       end
