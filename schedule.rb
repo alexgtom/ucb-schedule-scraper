@@ -469,12 +469,12 @@ class Section
 
   def parse_enrollment(str)
     if str == "SEE DEPT"
-      @limit = @enrolled = @waitlist = @available_seats = "SEE DEPT"
+      @limit = @enrolled = @waitlist = @available_seats = nil
     elsif match = str.match("Limit:([0-9]+) Enrolled:([0-9]+) Waitlist:([0-9]+) Avail Seats:([0-9]+)")
-      @limit = match[1]
-      @enrolled = match[2]
-      @waitlist = match[3]
-      @available_seats = match[4]
+      @limit = match[1].to_i
+      @enrolled = match[2].to_i
+      @waitlist = match[3].to_i
+      @available_seats = match[4].to_i
     end
   end
 

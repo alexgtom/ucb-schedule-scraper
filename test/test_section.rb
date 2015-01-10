@@ -54,10 +54,10 @@ class SectionTests < Test::Unit::TestCase
     assert_equal("Cross-listed with Ethnic Studies Graduate Group C301 section 1.", @section.note)
 
     # Enrollment On
-    assert_equal("7", @section.limit)
-    assert_equal("5", @section.enrolled)
-    assert_equal("0", @section.waitlist)
-    assert_equal("2", @section.available_seats)
+    assert_equal(7, @section.limit)
+    assert_equal(5, @section.enrolled)
+    assert_equal(0, @section.waitlist)
+    assert_equal(2, @section.available_seats)
     assert_equal("01/09/13", @section.enrollment_updated)
 
     # assert_equal("", @section.)
@@ -85,10 +85,10 @@ class SectionTests < Test::Unit::TestCase
 
   def test_parse_enrollment
     @section.send(:parse_enrollment, "SEE DEPT")
-    assert_equal("SEE DEPT", @section.limit)
-    assert_equal("SEE DEPT", @section.enrolled)
-    assert_equal("SEE DEPT", @section.waitlist)
-    assert_equal("SEE DEPT", @section.available_seats)
+    assert_equal(nil, @section.limit)
+    assert_equal(nil, @section.enrolled)
+    assert_equal(nil, @section.waitlist)
+    assert_equal(nil, @section.available_seats)
 
   end
 
